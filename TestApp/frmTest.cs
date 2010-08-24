@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -137,10 +138,38 @@ namespace TestApp {
 			{
 				conn.Open();
 				SqlCeDataReader rdr = new SqlCeCommand(sql, conn).ExecuteReader();
-				creator.CreateIndex("Bible", rdr);
+				creator.CreateIndex("Bible", new BibleVersuses(rdr));
 				rdr.Close();
 			}
 		}
+
+        public class BibleVersuses : IEnumerable<Phrase>
+        {
+            private readonly IDataReader dataReader;
+
+            public BibleVersuses(IDataReader dataReader)
+            {
+                this.dataReader = dataReader;
+            }
+
+            public IEnumerator<Phrase> GetEnumerator()
+            {
+                while(dataReader.Read())
+                {
+                    yield return new Phrase
+                                     {
+                                         Key = (int)dataReader["VerseID"],
+                                         Text = (string)dataReader["VerseText"]
+                                     };
+                }
+                yield break;
+            }
+
+            IEnumerator IEnumerable.GetEnumerator()
+            {
+                return GetEnumerator();
+            }
+        }
 
 		private void lbResults_DoubleClick(object sender, EventArgs e)
 		{

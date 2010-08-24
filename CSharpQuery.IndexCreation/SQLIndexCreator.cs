@@ -5,6 +5,7 @@
  * Downloaded From: http://www.InteractiveASP.NET							*
  ****************************************************************************/
 
+using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
 using System.IO;
@@ -35,20 +36,21 @@ namespace CSharpQuery.IndexCreation
 	    // 1) Load Table
 		// 2) Add items to index
 		// 3) Save Index
-		public void CreateIndex(string Name, IDataReader reader) {
+		public void CreateIndex(string Name, IEnumerable<Phrase> phrases) {
 			
 			var index = CreateAnIndex(Name);
 
-            LoadPhrasesIntoTheIndex(reader, index);
+            LoadPhrasesIntoTheIndex(phrases, index);
 
 		    index.SaveIndex();
 		}
 
-	    private void LoadPhrasesIntoTheIndex(IDataReader reader, TextIndex index)
+	    private void LoadPhrasesIntoTheIndex(IEnumerable<Phrase> phrases, TextIndex index)
 	    {
 	        var row = 0;
-	        while (reader.Read()) {
-	            AddPhrase(index, reader);
+	        foreach(var phrase in phrases)
+            {
+	            AddPhrase(index, phrase);
 	            row++;
 	            FireRowInsertedEvent(row);
 	        }
@@ -61,11 +63,11 @@ namespace CSharpQuery.IndexCreation
 	        return index;
 	    }
 
-	    private void AddPhrase(TextIndex index, IDataReader reader)
+	    private void AddPhrase(TextIndex index, Phrase phrase)
 	    {
-	        var key = (int)reader[keyField];
-	        var text = (string)reader[textField];
-	        index.AddPhrase(key, text);
+            //var key = (int)reader[keyField];
+            //var text = (string)reader[textField];
+	        index.AddPhrase(phrase.Key, phrase.Text);
 	    }
 
 	    private void FireRowInsertedEvent(int row)
