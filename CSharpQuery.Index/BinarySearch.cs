@@ -11,10 +11,16 @@ using System.Text;
 
 namespace CSharpQuery.Index {
 	public class BinarySearch {
+	    private readonly SearchPredicateComparer searchMethod;
 
-		public delegate int SearchPredicateComparer(string str1, string str2);
+	    public delegate int SearchPredicateComparer(string str1, string str2);
 
-		public static List<string> Search(SortedList<string, List<WordRef>> value, string searchPhrase, SearchPredicateComparer searchMethod) {
+        public BinarySearch(SearchPredicateComparer searchMethod)
+        {
+            this.searchMethod = searchMethod;
+        }
+
+	    public List<string> Search(SortedList<string, List<WordRef>> value, string searchPhrase) {
 
 			List<string> results = new List<string>();
 

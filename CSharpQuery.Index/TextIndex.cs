@@ -57,9 +57,11 @@ namespace CSharpQuery.Index
 			}
 		}
 
-		public List<WordRef> FrontMatch(string frontString) {
-			List<string> words = BinarySearch.Search(wordIndex, frontString, 
-				(string str1, string str2) => str2.StartsWith(str1) ? 0 : str1.CompareTo(str2) );
+		public List<WordRef> FrontMatch(string frontString)
+		{
+            var binarySearcher = new BinarySearch((str1, str2) => str2.StartsWith(str1) ? 0 : str1.CompareTo(str2));
+			var words = binarySearcher.Search(wordIndex, frontString);
+
 			List<WordRef> results = new List<WordRef>();
 			foreach (string word in words) {
 				results.AddRange(this[word]);
