@@ -17,9 +17,10 @@ using CSharpQuery.WordBreaker;
 using CSharpQuery.Thesaurus;
 
 namespace CSharpQuery.QueryEngine {
-	public static class FreeTextQuery {
+	public class FreeTextQuery {
+	    private readonly CultureInfo culture;
 
-		#region Fields - Query Tuning
+	    #region Fields - Query Tuning
 		public static decimal WeightWordMatching = 0.60m;
 		public static decimal WeightLowPhraseIndex = 0.15m;
 		public static decimal WeightSearchTermsProximity = 0.15m;
@@ -32,11 +33,11 @@ namespace CSharpQuery.QueryEngine {
 		public static string DatabasePath { get; set; }
 		#endregion
 
-		#region Constructor
-		static FreeTextQuery() {
-			Indexes = new SortedList<string, TextIndex>();
-		}
-		#endregion
+	    public FreeTextQuery(CultureInfo culture)
+	    {
+            Indexes = new SortedList<string, TextIndex>();
+	        this.culture = culture;
+	    }
 
 		#region Public Static Methods
 		public static void ExpireCachedIndexes() {
@@ -47,12 +48,11 @@ namespace CSharpQuery.QueryEngine {
 		}
 		#endregion
 
-		#region Public Methods
-		public static List<QueryResult> SearchFreeTextQuery(string catalog, CultureInfo culture, string query) {
-			return SearchFreeTextQuery(catalog, culture, query, uint.MaxValue);
+		public List<QueryResult> SearchFreeTextQuery(string catalog, string query) {
+			return SearchFreeTextQuery(catalog, query, uint.MaxValue);
 		}
 
-		public static List<QueryResult> SearchFreeTextQuery(string catalog, CultureInfo culture, string query, uint topNbyRank) {
+		public List<QueryResult> SearchFreeTextQuery(string catalog, string query, uint topNbyRank) {
 			readerLock.AcquireReaderLock(1000 * 60); // 60 second timeout
 			TextIndex index = GetTextIndex(catalog, culture);
 
@@ -146,8 +146,6 @@ namespace CSharpQuery.QueryEngine {
 			SortedList<int, QueryResult> queryResult = PivitQuery(results, resultList);
 			return RankResults(query, wordList, queryResult);
 		}
-
-		#endregion
 
 		#region Private Methods
 		/// <remarks>This method assumes a reader lock has already been acquired before calling this method</remarks>
