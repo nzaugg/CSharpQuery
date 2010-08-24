@@ -5,9 +5,6 @@
  * Downloaded From: http://www.InteractiveASP.NET							*
  ****************************************************************************/
 
-using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Data;
 using System.Globalization;
 using CSharpQuery.Index;
@@ -16,28 +13,59 @@ namespace CSharpQuery.IndexCreation
 {
 	public class SQLIndexCreator
 	{
+	    private readonly string keyField;
+	    private readonly string textField;
 
-		public delegate void RowInserted(int rowNum);
+	    public delegate void RowInserted(int rowNum);
 
 		public event RowInserted OnRowInserted;
 
-		// 1) Load Table
+        public SQLIndexCreator(string keyField, string textField)
+        {
+            this.keyField = keyField;
+            this.textField = textField;
+        }
+
+	    // 1) Load Table
 		// 2) Add items to index
 		// 3) Save Index
-		public void CreateIndex(string Name, string Directory, IDataReader reader, CultureInfo culture, string keyField, string textField) {
-			int row = 0;
-			TextIndex index = new TextIndex(Name, culture);
-			index.IndexFolder = Directory;
-			index.Initialize();
-			while (reader.Read()) {
-				int key = (int)reader[keyField];
-				string text = (string)reader[textField];
-				index.AddPhrase(key, text);
-				row++;
-				if (OnRowInserted != null)
-					OnRowInserted(row);
-			}
-			index.SaveIndex();
+		public void CreateIndex(string Name, string Directory, IDataReader reader, CultureInfo culture) {
+			
+			var index = CreateAnIndex(Name, culture, Directory);
+
+            LoadPhrasesIntoTheIndex(reader, index);
+
+		    index.SaveIndex();
 		}
+
+	    private void LoadPhrasesIntoTheIndex(IDataReader reader, TextIndex index)
+	    {
+	        var row = 0;
+	        while (reader.Read()) {
+	            AddPhrase(index, reader);
+	            row++;
+	            FireRowInsertedEvent(row);
+	        }
+	    }
+
+	    private static TextIndex CreateAnIndex(string Name, CultureInfo culture, string Directory)
+	    {
+	        var index = new TextIndex(Name, culture) {IndexFolder = Directory};
+	        index.Initialize();
+	        return index;
+	    }
+
+	    private void AddPhrase(TextIndex index, IDataReader reader)
+	    {
+	        var key = (int)reader[keyField];
+	        var text = (string)reader[textField];
+	        index.AddPhrase(key, text);
+	    }
+
+	    private void FireRowInsertedEvent(int row)
+	    {
+	        if (OnRowInserted != null)
+	            OnRowInserted(row);
+	    }
 	}
 }

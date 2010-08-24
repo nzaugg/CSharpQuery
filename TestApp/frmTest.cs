@@ -105,9 +105,6 @@ namespace TestApp {
 					}
 				}
 			}
-
-			// Now Create the Index
-			SQLIndexCreator creater = new SQLIndexCreator();
 		}
 
 		private static IndexInfo ExtractIndex()
@@ -133,13 +130,13 @@ namespace TestApp {
 
 		private void btnCreateIndex_Click(object sender, EventArgs e)
 		{
-			SQLIndexCreator creator = new SQLIndexCreator();
+            SQLIndexCreator creator = new SQLIndexCreator("VerseID", "VerseText");
 			string sql = "SELECT VerseID, VerseText FROM Verse";
 			using (SqlCeConnection conn = new SqlCeConnection(ConfigurationManager.ConnectionStrings["ConnectionString"].ConnectionString))
 			{
 				conn.Open();
 				SqlCeDataReader rdr = new SqlCeCommand(sql, conn).ExecuteReader();
-				creator.CreateIndex("Bible", IndexDir, rdr, new CultureInfo("en-US"), "VerseID", "VerseText");
+				creator.CreateIndex("Bible", IndexDir, rdr, new CultureInfo("en-US"));
 				rdr.Close();
 			}
 		}
