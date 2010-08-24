@@ -63,9 +63,9 @@ namespace TestApp {
 			Stopwatch sw = Stopwatch.StartNew();
 			FreeTextQuery.DatabasePath = path;
 
-            var freeTextQuery = new FreeTextQuery(new CultureInfo("en-US"));
+            var freeTextQuery = new FreeTextQuery("Bible", new CultureInfo("en-US"));
 
-			List<QueryResult> result = freeTextQuery.SearchFreeTextQuery("Bible", txtCriteria.Text);
+			List<QueryResult> result = freeTextQuery.SearchFreeTextQuery(txtCriteria.Text);
 			sw.Stop();
 
 			previousQuery = result;

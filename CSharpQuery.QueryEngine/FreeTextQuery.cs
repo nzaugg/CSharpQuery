@@ -18,6 +18,7 @@ using CSharpQuery.Thesaurus;
 
 namespace CSharpQuery.QueryEngine {
 	public class FreeTextQuery {
+	    private readonly string catalog;
 	    private readonly CultureInfo culture;
 
 	    #region Fields - Query Tuning
@@ -33,10 +34,11 @@ namespace CSharpQuery.QueryEngine {
 		public static string DatabasePath { get; set; }
 		#endregion
 
-	    public FreeTextQuery(CultureInfo culture)
+        public FreeTextQuery(string catalog, CultureInfo culture)
 	    {
             Indexes = new SortedList<string, TextIndex>();
-	        this.culture = culture;
+            this.catalog = catalog;
+            this.culture = culture;
 	    }
 
 		#region Public Static Methods
@@ -48,11 +50,11 @@ namespace CSharpQuery.QueryEngine {
 		}
 		#endregion
 
-		public List<QueryResult> SearchFreeTextQuery(string catalog, string query) {
-			return SearchFreeTextQuery(catalog, query, uint.MaxValue);
+		public List<QueryResult> SearchFreeTextQuery(string query) {
+			return SearchFreeTextQuery(query, uint.MaxValue);
 		}
 
-		public List<QueryResult> SearchFreeTextQuery(string catalog, string query, uint topNbyRank) {
+		public List<QueryResult> SearchFreeTextQuery(string query, uint topNbyRank) {
 			readerLock.AcquireReaderLock(1000 * 60); // 60 second timeout
 			TextIndex index = GetTextIndex(catalog, culture);
 
