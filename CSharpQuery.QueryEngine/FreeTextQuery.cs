@@ -19,6 +19,7 @@ using CSharpQuery.Thesaurus;
 namespace CSharpQuery.QueryEngine {
 	public class FreeTextQuery {
 	    private readonly string catalog;
+	    private readonly string databasePath;
 	    private readonly CultureInfo culture;
 
 	    #region Fields - Query Tuning
@@ -31,13 +32,13 @@ namespace CSharpQuery.QueryEngine {
 		#region Properties
 		public static SortedList<string, TextIndex> Indexes { get; set; }
 		public static ReaderWriterLock readerLock = new ReaderWriterLock();
-		public static string DatabasePath { get; set; }
 		#endregion
 
-        public FreeTextQuery(string catalog, CultureInfo culture)
+        public FreeTextQuery(string catalog, string databasePath, CultureInfo culture)
 	    {
             Indexes = new SortedList<string, TextIndex>();
             this.catalog = catalog;
+            this.databasePath = databasePath;
             this.culture = culture;
 	    }
 
@@ -117,7 +118,7 @@ namespace CSharpQuery.QueryEngine {
 			return RankResults(query, words, queryResults);
 		}
 
-		public static List<QueryResult> SearchTextQuery(string catalog, CultureInfo culture, string query) {
+		public List<QueryResult> SearchTextQuery(string catalog, CultureInfo culture, string query) {
 			readerLock.AcquireReaderLock(1000 * 60); // 60 second timeout
 			TextIndex index = GetTextIndex(catalog, culture);
 
@@ -151,14 +152,14 @@ namespace CSharpQuery.QueryEngine {
 
 		#region Private Methods
 		/// <remarks>This method assumes a reader lock has already been acquired before calling this method</remarks>
-		private static TextIndex GetTextIndex(string catalog, CultureInfo culture) {
+		private TextIndex GetTextIndex(string catalog, CultureInfo culture) {
 			string indexKey = catalog + culture.ToString();
 			if (Indexes.Keys.Contains(indexKey))
 				return Indexes[indexKey];
 			else {
 				// Load the index!
 				TextIndex index = new TextIndex(catalog, culture);
-				index.IndexFolder = DatabasePath;
+                index.IndexFolder = databasePath;
 				index.Initialize();
 				index.LoadIndex();
 				LockCookie lc = readerLock.UpgradeToWriterLock(1000 * 60); // 60 seconds!
