@@ -7,6 +7,7 @@
 
 using System.Data;
 using System.Globalization;
+using System.IO;
 using CSharpQuery.Index;
 
 namespace CSharpQuery.IndexCreation
@@ -15,23 +16,28 @@ namespace CSharpQuery.IndexCreation
 	{
 	    private readonly string keyField;
 	    private readonly string textField;
+	    private readonly CultureInfo culture;
+	    private readonly string directory;
 
 	    public delegate void RowInserted(int rowNum);
 
 		public event RowInserted OnRowInserted;
 
-        public SQLIndexCreator(string keyField, string textField)
+        public SQLIndexCreator(string keyField, string textField, 
+            CultureInfo culture, string directory)
         {
             this.keyField = keyField;
             this.textField = textField;
+            this.culture = culture;
+            this.directory = directory;
         }
 
 	    // 1) Load Table
 		// 2) Add items to index
 		// 3) Save Index
-		public void CreateIndex(string Name, string Directory, IDataReader reader, CultureInfo culture) {
+		public void CreateIndex(string Name, IDataReader reader) {
 			
-			var index = CreateAnIndex(Name, culture, Directory);
+			var index = CreateAnIndex(Name);
 
             LoadPhrasesIntoTheIndex(reader, index);
 
@@ -48,9 +54,9 @@ namespace CSharpQuery.IndexCreation
 	        }
 	    }
 
-	    private static TextIndex CreateAnIndex(string Name, CultureInfo culture, string Directory)
+	    private TextIndex CreateAnIndex(string Name)
 	    {
-	        var index = new TextIndex(Name, culture) {IndexFolder = Directory};
+	        var index = new TextIndex(Name, culture) {IndexFolder = directory};
 	        index.Initialize();
 	        return index;
 	    }

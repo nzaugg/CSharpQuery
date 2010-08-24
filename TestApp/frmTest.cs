@@ -130,13 +130,13 @@ namespace TestApp {
 
 		private void btnCreateIndex_Click(object sender, EventArgs e)
 		{
-            SQLIndexCreator creator = new SQLIndexCreator("VerseID", "VerseText");
+            SQLIndexCreator creator = new SQLIndexCreator("VerseID", "VerseText", new CultureInfo("en-US"), IndexDir);
 			string sql = "SELECT VerseID, VerseText FROM Verse";
 			using (SqlCeConnection conn = new SqlCeConnection(ConfigurationManager.ConnectionStrings["ConnectionString"].ConnectionString))
 			{
 				conn.Open();
 				SqlCeDataReader rdr = new SqlCeCommand(sql, conn).ExecuteReader();
-				creator.CreateIndex("Bible", IndexDir, rdr, new CultureInfo("en-US"));
+				creator.CreateIndex("Bible", rdr);
 				rdr.Close();
 			}
 		}
