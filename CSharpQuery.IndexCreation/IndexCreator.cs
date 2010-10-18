@@ -11,7 +11,7 @@ using CSharpQuery.Index;
 
 namespace CSharpQuery.IndexCreation
 {
-	public class SQLIndexCreator
+	public class IndexCreator
 	{
 	    private readonly CultureInfo culture;
 	    private readonly string directory;
@@ -20,7 +20,7 @@ namespace CSharpQuery.IndexCreation
 
 		public event RowInserted OnRowInserted;
 
-        public SQLIndexCreator(CultureInfo culture, string directory)
+        public IndexCreator(CultureInfo culture, string directory)
         {
             this.culture = culture;
             this.directory = directory;
