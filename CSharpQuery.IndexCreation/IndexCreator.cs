@@ -14,6 +14,7 @@ namespace CSharpQuery.IndexCreation
 	public class IndexCreator
 	{
 	    private readonly CultureInfo culture;
+        private TextIndexFiller textIndexFiller;
 	    private string directory;
 
 	    public delegate void RowInserted(int rowNum);
@@ -23,7 +24,7 @@ namespace CSharpQuery.IndexCreation
         public IndexCreator()
         {
             culture = new CultureInfo("en-US");
-            this.directory = directory;
+            textIndexFiller = new TextIndexFiller();
         }
 
 	    public string Directory
@@ -60,12 +61,13 @@ namespace CSharpQuery.IndexCreation
 	    {
 	        var index = new TextIndex();
 	        index.Initialize(directory, name);
+            textIndexFiller.Initialize(directory);
 	        return index;
 	    }
 
-	    private static void AddPhrase(TextIndex index, Phrase phrase)
+	    private void AddPhrase(TextIndex index, Phrase phrase)
 	    {
-	        index.AddPhrase(phrase.Key, phrase.Text);
+	        textIndexFiller.AddPhraseToIndex(index, phrase.Key, phrase.Text);
 	    }
 
 	    private void FireRowInsertedEvent(int row)

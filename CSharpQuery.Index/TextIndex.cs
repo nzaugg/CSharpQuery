@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Globalization;
-using CSharpQuery.WordBreaker;
 
 namespace CSharpQuery.Index
 {
@@ -49,28 +48,7 @@ namespace CSharpQuery.Index
             Name = name;
         }
 
-        public void AddPhrase(int key, string phrase)
-        {
-            // break the words
-            var words =
-                (new DefaultWordBreaker() {DatabasePath = IndexFolder}).BreakWords(phrase);
 
-            if (words == null)
-                return;
-
-            // add the words to the index
-            foreach (var wrd in words)
-            {
-                var reference = new WordRef(wrd.WordText, key, wrd.Index);
-                if (!wordIndex.ContainsKey(wrd.WordText))
-                    wordIndex.Add(wrd.WordText, new List<WordRef>(new[] {reference}));
-                else
-                {
-                    var wordRefs = wordIndex[wrd.WordText];
-                    wordRefs.Add(reference);
-                }
-            }
-        }
 
         public List<WordRef> FindWord(string wordText)
         {
