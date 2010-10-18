@@ -5,13 +5,10 @@
  * Downloaded From: http://www.InteractiveASP.NET							*
  ****************************************************************************/
 
-using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Collections;
 using System.Globalization;
 using CSharpQuery.WordBreaker;
-using System.IO;
 using CSharpQuery.Thesaurus;
 
 namespace CSharpQuery.Index
@@ -89,56 +86,7 @@ namespace CSharpQuery.Index
 			}
 		}
 
-		public void LoadIndex() {
-			string filename = new IndexFileNameGenerator().GetIndexFileName(Name, IndexFolder);
-			StreamReader reader = new StreamReader(
-				File.Open(filename, FileMode.Open, FileAccess.Read, FileShare.Read), Encoding.Unicode);
 
-			string header = ReadString(reader, BeginFile.Length);
-			if (header != BeginFile)
-				throw new FormatException("The file header is not in the expected format!");
-
-			string record;
-			while ((record = reader.ReadLine()) != null) {
-				if (record == EndFile)
-					break;
-				
-				List<WordRef> value = ExtractWordReferences(record);
-				wordIndex.Add(value[0].Word, value);
-			}
-			reader.Close();
-		}
-
-		private List<WordRef> ExtractWordReferences(string record) {
-			// saxphone5941389259415012559415492594168125
-			// ^BR      ^BF    ^FS^EF                                 ^ER
-			if (!record.StartsWith(BeginRecord))
-				throw new FormatException("Expected start of record!");
-			string word = record.Substring(BeginRecord.Length, record.IndexOf(BeginField) - 1);
-
-			int fieldStartIdx = record.IndexOf(BeginField);
-			int fieldEndIdx = record.IndexOf(EndField);
-
-			List<WordRef> results = new List<WordRef>();
-			while (fieldStartIdx > 0 && fieldEndIdx > 0) {
-				// 56166096
-				string Field = record.Substring(fieldStartIdx, fieldEndIdx- fieldStartIdx);
-				int rsIdx = Field.IndexOf(FieldInfoDelimeter);
-				int key = int.Parse(Field.Substring(1, rsIdx - 1));
-				int pos = int.Parse(Field.Substring(rsIdx + 1));
-				results.Add(new WordRef(word, key, pos));
-
-				fieldStartIdx = record.IndexOf(BeginField, fieldEndIdx);
-				fieldEndIdx = record.IndexOf(EndField, (fieldStartIdx == -1 ? fieldEndIdx : fieldStartIdx));
-			}
-			return results;
-		}
-
-		private string ReadString(StreamReader reader, int length) {
-			char[] buffer = new char[length];
-			reader.Read(buffer, 0, length);
-			return new string(buffer);
-		}
 
 		public List<WordRef> FindWord(string wordText) {
 			return this[wordText];
