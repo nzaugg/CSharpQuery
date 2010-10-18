@@ -28,8 +28,6 @@ namespace CSharpQuery.Index
 
 		protected SortedList<string, List<WordRef>> wordIndex;
 
-		public DefaultThesaurus Thesaurus { get; set; }
-
 		public CultureInfo Culture { get; set; }
 		public string Name { get; set; }
 		public string IndexFolder { get; set; }
@@ -45,7 +43,6 @@ namespace CSharpQuery.Index
 
 			this.wordIndex = new SortedList<string, List<WordRef>>();
 		    this.Culture = culture;
-			this.Thesaurus = new DefaultThesaurus(culture);
 		}
 
 		public List<WordRef> this[string word] {
@@ -71,7 +68,6 @@ namespace CSharpQuery.Index
 		public void Initialize() {
 			string databasePath = IndexFolder;
 			IndexFolder = databasePath;
-			Thesaurus.DatabasePath = databasePath;
 		}
 
 		public void AddPhrase(int key, string phrase)

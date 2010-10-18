@@ -8,11 +8,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using CSharpQuery.Index;
 using System.Threading;
 using System.Globalization;
-using System.ComponentModel;
 using CSharpQuery.WordBreaker;
 using CSharpQuery.Thesaurus;
 
@@ -63,7 +61,7 @@ namespace CSharpQuery.QueryEngine {
             List<Word> queryWordsList = (new DefaultWordBreaker(new CultureInfo("en-US")) { DatabasePath = databasePath }).BreakWords(query);
 
 			Dictionary<Synonym, List<WordRef>> results = new Dictionary<Synonym, List<WordRef>>();
-			List<Synonym> words = index.Thesaurus.Suggest(queryWordsList);
+			List<Synonym> words = (new DefaultThesaurus(culture){DatabasePath = databasePath}).Suggest(queryWordsList);
 			WordRefEqualityComparer comp = new WordRefEqualityComparer();
 
 			foreach (Synonym word in words) {
