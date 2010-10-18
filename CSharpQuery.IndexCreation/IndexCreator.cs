@@ -14,17 +14,22 @@ namespace CSharpQuery.IndexCreation
 	public class IndexCreator
 	{
 	    private readonly CultureInfo culture;
-	    private readonly string directory;
+	    private string directory;
 
 	    public delegate void RowInserted(int rowNum);
 
 		public event RowInserted OnRowInserted;
 
-        public IndexCreator(string directory)
+        public IndexCreator()
         {
             culture = new CultureInfo("en-US");
             this.directory = directory;
         }
+
+	    public string Directory
+	    {
+            set { directory = value; }
+	    }
 
 	    // 1) Load Table
 		// 2) Add items to index
