@@ -37,7 +37,7 @@ namespace CSharpQuery.IndexCreation
 		// 3) Save Index
 		public void CreateIndex(string name, IEnumerable<Phrase> phrases) {
 			
-			var index = CreateAnIndex(name);
+			var index = CreateAnIndex();
 
             LoadPhrasesIntoTheIndex(phrases, index);
 
@@ -57,10 +57,9 @@ namespace CSharpQuery.IndexCreation
 	        }
 	    }
 
-	    private TextIndex CreateAnIndex(string name)
+	    private TextIndex CreateAnIndex()
 	    {
 	        var index = new TextIndex();
-	        index.Initialize(directory, name);
             textIndexFiller.Initialize(directory);
 	        return index;
 	    }

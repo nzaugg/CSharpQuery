@@ -29,7 +29,6 @@ namespace CSharpQuery.Index
             string filename = new IndexFileNameGenerator().GetIndexFileName(name, indexFolder);
 
             var textIndex = new TextIndex();
-            textIndex.Initialize(indexFolder, name);
 
             StreamReader reader = new StreamReader(
                 File.Open(filename, FileMode.Open, FileAccess.Read, FileShare.Read), Encoding.Unicode);
