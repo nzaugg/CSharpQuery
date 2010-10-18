@@ -51,7 +51,7 @@ namespace CSharpQuery.IndexCreation
 
 	    private TextIndex CreateAnIndex(string name)
 	    {
-	        var index = new TextIndex(name) {IndexFolder = directory};
+	        var index = new TextIndex() {Name = name, IndexFolder = directory};
 	        index.Initialize();
 	        return index;
 	    }

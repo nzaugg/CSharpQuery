@@ -158,7 +158,7 @@ namespace CSharpQuery.QueryEngine {
 				return Indexes[indexKey];
 			else {
 				// Load the index!
-				TextIndex index = new TextIndex(catalog);
+				TextIndex index = new TextIndex() {Name = catalog};
                 index.IndexFolder = databasePath;
 				index.Initialize();
 				index.LoadIndex();
