@@ -53,7 +53,7 @@ namespace CSharpQuery.Index
         {
             // break the words
             var words =
-                (new DefaultWordBreaker(new CultureInfo("en-US")) {DatabasePath = IndexFolder}).BreakWords(phrase);
+                (new DefaultWordBreaker() {DatabasePath = IndexFolder}).BreakWords(phrase);
 
             if (words == null)
                 return;

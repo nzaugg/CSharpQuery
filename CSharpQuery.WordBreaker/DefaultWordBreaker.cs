@@ -36,8 +36,8 @@ namespace CSharpQuery.WordBreaker {
 		public CultureInfo Culture { get; set; }
 		public string DatabasePath { get; set; }
 
-		public DefaultWordBreaker(CultureInfo culture) {
-			this.Culture = culture;
+		public DefaultWordBreaker() {
+            this.Culture = new CultureInfo("en-US");
 		}
 
 		public void Initialize() {

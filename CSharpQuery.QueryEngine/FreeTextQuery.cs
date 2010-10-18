@@ -58,7 +58,7 @@ namespace CSharpQuery.QueryEngine {
 			TextIndex index = GetTextIndex(catalog, culture);
 
 			// Get all of the words (front match)
-            List<Word> queryWordsList = (new DefaultWordBreaker(new CultureInfo("en-US")) { DatabasePath = databasePath }).BreakWords(query);
+            List<Word> queryWordsList = (new DefaultWordBreaker() { DatabasePath = databasePath }).BreakWords(query);
 
 			Dictionary<Synonym, List<WordRef>> results = new Dictionary<Synonym, List<WordRef>>();
 			List<Synonym> words = (new DefaultThesaurus(culture){DatabasePath = databasePath}).Suggest(queryWordsList);
@@ -72,7 +72,7 @@ namespace CSharpQuery.QueryEngine {
 					if (syn == word.OriginalWord)
 						continue;
 
-                    List<Word> synBreaker = (new DefaultWordBreaker(new CultureInfo("en-US")) { DatabasePath = databasePath }).BreakWords(syn);
+                    List<Word> synBreaker = (new DefaultWordBreaker() { DatabasePath = databasePath }).BreakWords(syn);
 					List<WordRef> SubResults = new List<WordRef>();
 					bool FirstLoop = true;
 
@@ -121,7 +121,7 @@ namespace CSharpQuery.QueryEngine {
 			TextIndex index = GetTextIndex(catalog, culture);
 
 			// Get all of the words (front match)
-            List<Word> queryWordsList = (new DefaultWordBreaker(new CultureInfo("en-US")) { DatabasePath = databasePath }).BreakWords(query);
+            List<Word> queryWordsList = (new DefaultWordBreaker() { DatabasePath = databasePath }).BreakWords(query);
 			List<Synonym> wordList = queryWordsList.Select(n => new Synonym() { OriginalWord = n.WordText }).ToList();
 
 			Dictionary<Synonym, List<WordRef>> results = new Dictionary<Synonym, List<WordRef>>();
