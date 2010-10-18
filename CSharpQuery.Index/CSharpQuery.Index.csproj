@@ -67,6 +67,7 @@
     <Compile Include="Phrase.cs" />
     <Compile Include="TextIndex.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TextIndexSaver.cs" />
     <Compile Include="WordRef.cs" />
   </ItemGroup>
   <ItemGroup>
