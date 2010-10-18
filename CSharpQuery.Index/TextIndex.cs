@@ -48,8 +48,6 @@ namespace CSharpQuery.Index
             Name = name;
         }
 
-
-
         public List<WordRef> FindWord(string wordText)
         {
             return this[wordText];
