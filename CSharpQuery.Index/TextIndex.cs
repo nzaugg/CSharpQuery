@@ -16,6 +16,22 @@ using CSharpQuery.Thesaurus;
 
 namespace CSharpQuery.Index
 {
+    public class IndexFileNameGenerator
+    {
+        private CultureInfo cultureInfo;
+
+        public IndexFileNameGenerator()
+        {
+            cultureInfo = new CultureInfo("en-US");
+        }
+
+        public string GetIndexFileName(string name, string indexFolder)
+        {
+            return Path.Combine(indexFolder,
+                string.Format("Index_{0}.{1}.index", name, cultureInfo == CultureInfo.InvariantCulture ? "invarient" : cultureInfo.ToString()));
+        }
+    }
+
 	public class TextIndex
 	{
 		private static string BeginFile = (char)01 + "CSharpQuery_Index" + (char)01;
@@ -31,11 +47,8 @@ namespace CSharpQuery.Index
 		public CultureInfo Culture { get; set; }
 		public string Name { get; set; }
 		public string IndexFolder { get; set; }
-		public string IndexFileName {
-			get {
-				return Path.Combine(IndexFolder,
-					string.Format("Index_{0}.{1}.index", Name, Culture == CultureInfo.InvariantCulture ? "invarient" : Culture.ToString()));
-			}
+		public string GetIndexFileName(){
+		    return new IndexFileNameGenerator().GetIndexFileName(Name, IndexFolder);
 		}
 
 		public TextIndex() {
@@ -91,7 +104,7 @@ namespace CSharpQuery.Index
 		}
 
 		public void SaveIndex() {
-			string fileName = IndexFileName;
+			string fileName = GetIndexFileName();
 
 			if (File.Exists(fileName))
 				File.Delete(fileName);
@@ -125,7 +138,7 @@ namespace CSharpQuery.Index
 		}
 
 		public void LoadIndex() {
-			string filename = IndexFileName;
+			string filename = GetIndexFileName();
 			StreamReader reader = new StreamReader(
 				File.Open(filename, FileMode.Open, FileAccess.Read, FileShare.Read), Encoding.Unicode);
 
