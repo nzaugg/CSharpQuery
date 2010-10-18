@@ -41,9 +41,11 @@ namespace CSharpQuery.Index
 			}
 		}
 
-		public TextIndex(string name, CultureInfo culture) {
+		public TextIndex(string name) {
+            var culture = new CultureInfo("en-US");
+
 			this.wordIndex = new SortedList<string, List<WordRef>>();
-			this.Culture = culture;
+		    this.Culture = culture;
 			this.Name = name;
 			this.WordBreaker = new DefaultWordBreaker(culture);
 			this.Thesaurus = new DefaultThesaurus(culture);

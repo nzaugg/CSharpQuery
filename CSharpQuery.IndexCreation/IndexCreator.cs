@@ -20,18 +20,18 @@ namespace CSharpQuery.IndexCreation
 
 		public event RowInserted OnRowInserted;
 
-        public IndexCreator(CultureInfo culture, string directory)
+        public IndexCreator(string directory)
         {
-            this.culture = culture;
+            culture = new CultureInfo("en-US");
             this.directory = directory;
         }
 
 	    // 1) Load Table
 		// 2) Add items to index
 		// 3) Save Index
-		public void CreateIndex(string Name, IEnumerable<Phrase> phrases) {
+		public void CreateIndex(string name, IEnumerable<Phrase> phrases) {
 			
-			var index = CreateAnIndex(Name);
+			var index = CreateAnIndex(name);
 
             LoadPhrasesIntoTheIndex(phrases, index);
 
@@ -49,9 +49,9 @@ namespace CSharpQuery.IndexCreation
 	        }
 	    }
 
-	    private TextIndex CreateAnIndex(string Name)
+	    private TextIndex CreateAnIndex(string name)
 	    {
-	        var index = new TextIndex(Name, culture) {IndexFolder = directory};
+	        var index = new TextIndex(name) {IndexFolder = directory};
 	        index.Initialize();
 	        return index;
 	    }
