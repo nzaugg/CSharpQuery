@@ -157,8 +157,7 @@ namespace CSharpQuery.QueryEngine {
 			else {
 				// Load the index!
 				TextIndex index = new TextIndex() {Name = catalog};
-                index.IndexFolder = databasePath;
-				index.Initialize();
+				index.Initialize(databasePath);
 				index.LoadIndex();
 				LockCookie lc = readerLock.UpgradeToWriterLock(1000 * 60); // 60 seconds!
 				Indexes.Add(indexKey, index);

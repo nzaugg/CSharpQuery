@@ -46,12 +46,9 @@ namespace CSharpQuery.Index
 
 		public CultureInfo Culture { get; set; }
 		public string Name { get; set; }
-		public string IndexFolder { get; set; }
-		public string GetIndexFileName(){
-		    return new IndexFileNameGenerator().GetIndexFileName(Name, IndexFolder);
-		}
+        public string IndexFolder { get; private set; }
 
-		public TextIndex() {
+	    public TextIndex() {
             var culture = new CultureInfo("en-US");
 
 			this.wordIndex = new SortedList<string, List<WordRef>>();
@@ -78,8 +75,7 @@ namespace CSharpQuery.Index
 			return results;
 		}
 
-		public void Initialize() {
-			string databasePath = IndexFolder;
+		public void Initialize(string databasePath) {
 			IndexFolder = databasePath;
 		}
 
@@ -104,7 +100,7 @@ namespace CSharpQuery.Index
 		}
 
 		public void SaveIndex() {
-			string fileName = GetIndexFileName();
+			string fileName = new IndexFileNameGenerator().GetIndexFileName(Name, IndexFolder);
 
 			if (File.Exists(fileName))
 				File.Delete(fileName);
@@ -138,7 +134,7 @@ namespace CSharpQuery.Index
 		}
 
 		public void LoadIndex() {
-			string filename = GetIndexFileName();
+			string filename = new IndexFileNameGenerator().GetIndexFileName(Name, IndexFolder);
 			StreamReader reader = new StreamReader(
 				File.Open(filename, FileMode.Open, FileAccess.Read, FileShare.Read), Encoding.Unicode);
 
