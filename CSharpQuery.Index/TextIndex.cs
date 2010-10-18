@@ -8,16 +8,12 @@ namespace CSharpQuery.Index
     {
         protected SortedList<string, List<WordRef>> wordIndex;
 
-        public CultureInfo Culture { get; set; }
         public string Name { get; private set; }
         public string IndexFolder { get; private set; }
 
         public TextIndex()
         {
-            var culture = new CultureInfo("en-US");
-
             wordIndex = new SortedList<string, List<WordRef>>();
-            Culture = culture;
         }
 
         public SortedList<string, List<WordRef>> WordIndex
