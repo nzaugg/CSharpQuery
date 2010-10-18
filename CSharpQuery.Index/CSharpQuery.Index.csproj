@@ -70,6 +70,7 @@
     <Compile Include="TextIndexFiller.cs" />
     <Compile Include="TextIndexLoader.cs" />
     <Compile Include="TextIndexSaver.cs" />
+    <Compile Include="TextIndexSearcher.cs" />
     <Compile Include="WordRef.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -19,6 +19,7 @@ namespace CSharpQuery.QueryEngine {
 	    private readonly string catalog;
 	    private readonly string databasePath;
 	    private readonly CultureInfo culture;
+	    private TextIndexSearcher textIndexSearcher;
 
 	    #region Fields - Query Tuning
 		public static decimal WeightWordMatching = 0.60m;
@@ -38,6 +39,8 @@ namespace CSharpQuery.QueryEngine {
             this.catalog = catalog;
             this.databasePath = databasePath;
             this.culture = culture;
+
+            textIndexSearcher = new TextIndexSearcher();
 	    }
 
 		#region Public Static Methods
@@ -65,7 +68,7 @@ namespace CSharpQuery.QueryEngine {
 			WordRefEqualityComparer comp = new WordRefEqualityComparer();
 
 			foreach (Synonym word in words) {
-				List<WordRef> res = index.FrontMatch(word.OriginalWord);
+				List<WordRef> res = textIndexSearcher.FrontMatch(index, word.OriginalWord);
 
 				// Synonyms
 				foreach (string syn in word.SuggestedWords) {
@@ -78,7 +81,7 @@ namespace CSharpQuery.QueryEngine {
 
 					foreach (Word w in synBreaker) {
 						// maybe intersect the results here?
-						List<WordRef> lookup = index.FindWord(w.WordText);
+						List<WordRef> lookup = textIndexSearcher.FindWord(index, w.WordText);
 						if (lookup != null) {
 							if (FirstLoop) {
 								SubResults.AddRange(lookup);
@@ -126,7 +129,7 @@ namespace CSharpQuery.QueryEngine {
 
 			Dictionary<Synonym, List<WordRef>> results = new Dictionary<Synonym, List<WordRef>>();
 			foreach (Synonym word in wordList) {
-				List<WordRef> res = index.FindWord(word.OriginalWord);
+				List<WordRef> res = textIndexSearcher.FindWord(index, word.OriginalWord);
 				results.Add(word, res);
 			}
 			readerLock.ReleaseReaderLock();

@@ -30,17 +30,6 @@ namespace CSharpQuery.Index
             }
         }
 
-        public List<WordRef> FrontMatch(string frontString)
-        {
-            var binarySearcher = new BinarySearch((str1, str2) => str2.StartsWith(str1) ? 0 : str1.CompareTo(str2));
-            var words = binarySearcher.Search(wordIndex, frontString);
-
-            var results = new List<WordRef>();
-            foreach (var word in words)
-                results.AddRange(this[word]);
-            
-            return results;
-        }
 
         public void Initialize(string databasePath, string name)
         {
@@ -48,9 +37,5 @@ namespace CSharpQuery.Index
             Name = name;
         }
 
-        public List<WordRef> FindWord(string wordText)
-        {
-            return this[wordText];
-        }
     }
 }
