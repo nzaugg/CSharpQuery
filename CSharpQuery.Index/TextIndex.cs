@@ -28,7 +28,6 @@ namespace CSharpQuery.Index
 
 		protected SortedList<string, List<WordRef>> wordIndex;
 
-		public DefaultWordBreaker WordBreaker { get; set; }
 		public DefaultThesaurus Thesaurus { get; set; }
 
 		public CultureInfo Culture { get; set; }
@@ -46,7 +45,6 @@ namespace CSharpQuery.Index
 
 			this.wordIndex = new SortedList<string, List<WordRef>>();
 		    this.Culture = culture;
-			this.WordBreaker = new DefaultWordBreaker(culture);
 			this.Thesaurus = new DefaultThesaurus(culture);
 		}
 
@@ -73,14 +71,13 @@ namespace CSharpQuery.Index
 		public void Initialize() {
 			string databasePath = IndexFolder;
 			IndexFolder = databasePath;
-			WordBreaker.DatabasePath = databasePath;
 			Thesaurus.DatabasePath = databasePath;
 		}
 
 		public void AddPhrase(int key, string phrase)
 		{
 			// break the words
-			List<Word> words = WordBreaker.BreakWords(phrase);
+            List<Word> words = (new DefaultWordBreaker(new CultureInfo("en-US")){DatabasePath = IndexFolder}).BreakWords(phrase);
 
 			if (words == null)
 				return;
