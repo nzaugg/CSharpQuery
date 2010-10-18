@@ -45,7 +45,7 @@ namespace CSharpQuery.Index
 		protected SortedList<string, List<WordRef>> wordIndex;
 
 		public CultureInfo Culture { get; set; }
-		public string Name { get; set; }
+		public string Name { get; private set; }
         public string IndexFolder { get; private set; }
 
 	    public TextIndex() {
@@ -75,8 +75,9 @@ namespace CSharpQuery.Index
 			return results;
 		}
 
-		public void Initialize(string databasePath) {
+		public void Initialize(string databasePath, string name) {
 			IndexFolder = databasePath;
+		    Name = name;
 		}
 
 		public void AddPhrase(int key, string phrase)
