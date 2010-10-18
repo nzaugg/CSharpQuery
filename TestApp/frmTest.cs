@@ -132,7 +132,7 @@ namespace TestApp {
 
 		private void btnCreateIndex_Click(object sender, EventArgs e)
 		{
-            SQLIndexCreator creator = new SQLIndexCreator("VerseID", "VerseText", new CultureInfo("en-US"), IndexDir);
+            SQLIndexCreator creator = new SQLIndexCreator(new CultureInfo("en-US"), IndexDir);
 			string sql = "SELECT VerseID, VerseText FROM Verse";
 			using (SqlCeConnection conn = new SqlCeConnection(ConfigurationManager.ConnectionStrings["ConnectionString"].ConnectionString))
 			{
