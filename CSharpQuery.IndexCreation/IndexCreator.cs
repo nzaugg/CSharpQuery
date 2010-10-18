@@ -40,7 +40,9 @@ namespace CSharpQuery.IndexCreation
 
             LoadPhrasesIntoTheIndex(phrases, index);
 
-		    index.SaveIndex();
+		    var textIndexSaver = new TextIndexSaver();
+            textIndexSaver.Initialize(directory, name);
+		    textIndexSaver.SaveIndex(index);
 		}
 
 	    private void LoadPhrasesIntoTheIndex(IEnumerable<Phrase> phrases, TextIndex index)
