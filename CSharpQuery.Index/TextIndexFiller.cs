@@ -25,11 +25,11 @@ namespace CSharpQuery.Index
             foreach (var wrd in words)
             {
                 var reference = new WordRef(wrd.WordText, key, wrd.Index);
-                if (!index.WordIndex.ContainsKey(wrd.WordText))
-                    index.WordIndex.Add(wrd.WordText, new List<WordRef>(new[] {reference}));
+                if (!index.ContainsKey(wrd.WordText))
+                    index.Add(wrd.WordText, new List<WordRef>(new[] {reference}));
                 else
                 {
-                    var wordRefs = index.WordIndex[wrd.WordText];
+                    var wordRefs = index[wrd.WordText];
                     wordRefs.Add(reference);
                 }
             }

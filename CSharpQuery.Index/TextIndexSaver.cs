@@ -35,11 +35,11 @@ namespace CSharpQuery.Index
 
             writer.Write(BeginFile);
 
-            foreach (string key in textIndex.WordIndex.Keys)
+            foreach (string key in textIndex.Keys)
             {
                 writer.Write(BeginRecord);
                 writer.Write(key);
-                List<WordRef> wordRecords = (List<WordRef>)textIndex.WordIndex[key];
+                List<WordRef> wordRecords = textIndex[key];
                 wordRecords.Sort((Comparison<WordRef>)delegate(WordRef x, WordRef y)
                                                           {
                                                               if (x.Key == y.Key)

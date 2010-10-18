@@ -45,7 +45,7 @@ namespace CSharpQuery.Index
                     break;
 
                 List<WordRef> value = ExtractWordReferences(record);
-                textIndex.WordIndex.Add(value[0].Word, value);
+                textIndex.Add(value[0].Word, value);
             }
             reader.Close();
 
