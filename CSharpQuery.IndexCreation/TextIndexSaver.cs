@@ -9,6 +9,12 @@ namespace CSharpQuery.IndexCreation
     public class TextIndexSaver
     {
         private TextIndexFileInformation textIndexFileInformation;
+        private IIndexFileNameGenerator indexFileNameGenerator;
+
+        public TextIndexSaver()
+        {
+            indexFileNameGenerator = new IndexFileNameGenerator();
+        }
 
         public void Initialize(string databasePath, string name)
         {
@@ -22,7 +28,7 @@ namespace CSharpQuery.IndexCreation
 
         public void SaveIndex(TextIndex textIndex)
         {
-            string fileName = new IndexFileNameGenerator().GetIndexFileName(Name, IndexFolder);
+            string fileName = indexFileNameGenerator.GetIndexFileName(Name, IndexFolder);
 
             if (File.Exists(fileName))
                 File.Delete(fileName);

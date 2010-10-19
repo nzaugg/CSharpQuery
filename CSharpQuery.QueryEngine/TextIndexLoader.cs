@@ -11,17 +11,23 @@ namespace CSharpQuery.QueryEngine
         private string indexFolder;
         private string name;
         private TextIndexFileInformation textIndexFileInformation;
+        private IIndexFileNameGenerator indexFileNameGenerator;
+
+        public TextIndexLoader()
+        {
+            textIndexFileInformation = new TextIndexFileInformation();
+            indexFileNameGenerator = new IndexFileNameGenerator();
+        }
 
         public void Initialize(string databasePath, string name)
         {
-            textIndexFileInformation = new TextIndexFileInformation();
             indexFolder = databasePath;
             this.name = name;
         }
 
         public TextIndex LoadIndex()
         {
-            var filename = new IndexFileNameGenerator().GetIndexFileName(name, indexFolder);
+            var filename = indexFileNameGenerator.GetIndexFileName(name, indexFolder);
 
             var textIndex = new TextIndex();
 

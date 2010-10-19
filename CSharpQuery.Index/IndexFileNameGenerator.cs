@@ -3,7 +3,12 @@ using System.IO;
 
 namespace CSharpQuery.Index
 {
-    public class IndexFileNameGenerator
+    public interface IIndexFileNameGenerator
+    {
+        string GetIndexFileName(string name, string indexFolder);
+    }
+
+    public class IndexFileNameGenerator : IIndexFileNameGenerator
     {
         private CultureInfo cultureInfo;
 
