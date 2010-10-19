@@ -10,8 +10,14 @@ using CSharpQuery.Index;
 
 namespace CSharpQuery.IndexCreation
 {
-	public class IndexCreator
-	{
+    public interface IIndexCreator
+    {
+        string Directory { set; }
+        void CreateIndex(string name, IEnumerable<Phrase> phrases);
+    }
+
+    public class IndexCreator : IIndexCreator
+    {
         private ITextIndexFiller textIndexFiller;
         private ITextIndexSaver textIndexSaver;
 	    private string directory;
