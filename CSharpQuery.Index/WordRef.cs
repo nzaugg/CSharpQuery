@@ -5,9 +5,7 @@
  * Downloaded From: http://www.InteractiveASP.NET							*
  ****************************************************************************/
 
-using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace CSharpQuery.Index {
 	public class WordRef {
@@ -16,9 +14,9 @@ namespace CSharpQuery.Index {
 		public int PhraseIndex { get; set; }
 
 		public WordRef(string word, int key, int phraseIndex) {
-			this.Word = word;
-			this.Key = key;
-			this.PhraseIndex = phraseIndex;
+			Word = word;
+			Key = key;
+			PhraseIndex = phraseIndex;
 		}
 
 		public override bool Equals(object obj) {
@@ -30,7 +28,7 @@ namespace CSharpQuery.Index {
 		}
 
 		public override int GetHashCode() {
-			return this.Key + this.PhraseIndex;
+			return Key + PhraseIndex;
 		}
 
 		public override string ToString() {
