@@ -6,24 +6,23 @@ namespace CSharpQuery.IndexCreation
 {
     public interface ITextIndexFiller
     {
-        void Initialize(string indexFolder);
         void AddPhraseToIndex(TextIndex index, int key, string phrase);
     }
 
     public class TextIndexFiller : ITextIndexFiller
     {
-        private string indexFolder;
+        private readonly IndexCreationContext indexCreationContext;
 
-        public void Initialize(string indexFolder)
+        public TextIndexFiller(IndexCreationContext indexCreationContext)
         {
-            this.indexFolder = indexFolder;
+            this.indexCreationContext = indexCreationContext;
         }
 
         public void AddPhraseToIndex(TextIndex index, int key, string phrase)
         {
             // break the words
             var words =
-                (new DefaultWordBreaker {DatabasePath = indexFolder}).BreakWords(phrase);
+                (new DefaultWordBreaker { DatabasePath = indexCreationContext.Directory}).BreakWords(phrase);
 
             if (words == null)
                 return;

@@ -12,8 +12,7 @@ namespace CSharpQuery.IndexCreation
 {
     public interface IIndexCreator
     {
-        string Directory { set; }
-        void CreateIndex(string name, IEnumerable<Phrase> phrases);
+        void CreateIndex(IEnumerable<Phrase> phrases);
     }
 
     public class IndexCreator : IIndexCreator
@@ -26,27 +25,21 @@ namespace CSharpQuery.IndexCreation
 
 		public event RowInserted OnRowInserted;
 
-        public IndexCreator()
+        public IndexCreator(IndexCreationContext indexCreationContext)
         {
-            textIndexFiller = new TextIndexFiller();
-            textIndexSaver = new TextIndexSaver();
+            textIndexFiller = new TextIndexFiller(indexCreationContext);
+            textIndexSaver = new TextIndexSaver(indexCreationContext);
         }
-
-	    public string Directory
-	    {
-            set { directory = value; }
-	    }
 
 	    // 1) Load Table
 		// 2) Add items to index
 		// 3) Save Index
-		public void CreateIndex(string name, IEnumerable<Phrase> phrases) {
+		public void CreateIndex(IEnumerable<Phrase> phrases) {
 			
 			var index = CreateAnIndex();
 
             LoadPhrasesIntoTheIndex(phrases, index);
 
-            textIndexSaver.Initialize(directory, name);
 		    textIndexSaver.SaveIndex(index);
 		}
 
@@ -63,9 +56,7 @@ namespace CSharpQuery.IndexCreation
 
 	    private TextIndex CreateAnIndex()
 	    {
-	        var index = new TextIndex();
-            textIndexFiller.Initialize(directory);
-	        return index;
+	        return new TextIndex();
 	    }
 
 	    private void AddPhrase(TextIndex index, Phrase phrase)

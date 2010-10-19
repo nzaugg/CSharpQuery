@@ -8,9 +8,6 @@ namespace CSharpQuery.IndexCreation
 {
     public interface ITextIndexSaver
     {
-        void Initialize(string databasePath, string name);
-        string IndexFolder { get; }
-        string Name { get; }
         void SaveIndex(TextIndex textIndex);
     }
 
@@ -18,25 +15,18 @@ namespace CSharpQuery.IndexCreation
     {
         private TextIndexFileInformation textIndexFileInformation;
         private IIndexFileNameGenerator indexFileNameGenerator;
+        private IndexCreationContext indexCreationContext;
 
-        public TextIndexSaver()
+        public TextIndexSaver(IndexCreationContext indexCreationContext)
         {
+            this.indexCreationContext = indexCreationContext;
             indexFileNameGenerator = new IndexFileNameGenerator();
-        }
-
-        public void Initialize(string databasePath, string name)
-        {
             textIndexFileInformation = new TextIndexFileInformation();
-            IndexFolder = databasePath;
-            Name = name;
         }
-
-        public string IndexFolder { get; private set; }
-        public string Name { get; private set; }
 
         public void SaveIndex(TextIndex textIndex)
         {
-            string fileName = indexFileNameGenerator.GetIndexFileName(Name, IndexFolder);
+            string fileName = indexFileNameGenerator.GetIndexFileName(indexCreationContext.Name, indexCreationContext.Directory);
 
             if (File.Exists(fileName))
                 File.Delete(fileName);

@@ -132,13 +132,15 @@ namespace TestApp {
 
 		private void btnCreateIndex_Click(object sender, EventArgs e)
 		{
-            IIndexCreator creator = new IndexCreator { Directory = IndexDir };
+		    var context = new IndexCreationContext {Directory = IndexDir, Name = "Bible"};
+		    var creator = new IndexCreator(context);
+
 			string sql = "SELECT VerseID, VerseText FROM Verse";
 			using (SqlCeConnection conn = new SqlCeConnection(ConfigurationManager.ConnectionStrings["ConnectionString"].ConnectionString))
 			{
 				conn.Open();
 				SqlCeDataReader rdr = new SqlCeCommand(sql, conn).ExecuteReader();
-				creator.CreateIndex("Bible", new BibleVersuses(rdr));
+				creator.CreateIndex(new BibleVersuses(rdr));
 				rdr.Close();
 			}
 		}
