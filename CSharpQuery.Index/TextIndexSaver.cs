@@ -7,15 +7,11 @@ namespace CSharpQuery.Index
 {
     public class TextIndexSaver
     {
-        private static string BeginFile = (char)01 + "CSharpQuery_Index" + (char)01;
-        private static string BeginRecord = (char)02 + "";
-        private static string BeginField = (char)03 + "";
-        private static string FieldInfoDelimeter = (char)04 + "";
-        private static string EndField = (char)05 + "";
-        private static string EndRecord = (char)06 + "\r\n";
-        private static string EndFile = (char)07 + "";
-        
-        public void Initialize(string databasePath, string name) {
+        private TextIndexFileInformation textIndexFileInformation;
+
+        public void Initialize(string databasePath, string name)
+        {
+            textIndexFileInformation = new TextIndexFileInformation();
             IndexFolder = databasePath;
             Name = name;
         }
@@ -33,11 +29,11 @@ namespace CSharpQuery.Index
             StreamWriter writer = new StreamWriter(
                 File.Open(fileName, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None), Encoding.Unicode);
 
-            writer.Write(BeginFile);
+            writer.Write(textIndexFileInformation.BeginFile);
 
             foreach (string key in textIndex.Keys)
             {
-                writer.Write(BeginRecord);
+                writer.Write(textIndexFileInformation.BeginRecord);
                 writer.Write(key);
                 List<WordRef> wordRecords = textIndex[key];
                 wordRecords.Sort((Comparison<WordRef>)delegate(WordRef x, WordRef y)
@@ -49,15 +45,15 @@ namespace CSharpQuery.Index
                                                           });
                 foreach (WordRef wref in wordRecords)
                 {
-                    writer.Write(BeginField);
+                    writer.Write(textIndexFileInformation.BeginField);
                     writer.Write(wref.Key);
-                    writer.Write(FieldInfoDelimeter);
+                    writer.Write(textIndexFileInformation.FieldInfoDelimeter);
                     writer.Write(wref.PhraseIndex);
-                    writer.Write(EndField);
+                    writer.Write(textIndexFileInformation.EndField);
                 }
-                writer.Write(EndRecord);
+                writer.Write(textIndexFileInformation.EndRecord);
             }
-            writer.Write(EndFile);
+            writer.Write(textIndexFileInformation.EndFile);
             writer.Close();
         }
     }
