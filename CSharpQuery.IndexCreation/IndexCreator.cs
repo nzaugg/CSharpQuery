@@ -6,15 +6,14 @@
  ****************************************************************************/
 
 using System.Collections.Generic;
-using System.Globalization;
 using CSharpQuery.Index;
 
 namespace CSharpQuery.IndexCreation
 {
 	public class IndexCreator
 	{
-	    private readonly CultureInfo culture;
-        private TextIndexFiller textIndexFiller;
+	    private TextIndexFiller textIndexFiller;
+	    private TextIndexSaver textIndexSaver;
 	    private string directory;
 
 	    public delegate void RowInserted(int rowNum);
@@ -23,8 +22,8 @@ namespace CSharpQuery.IndexCreation
 
         public IndexCreator()
         {
-            culture = new CultureInfo("en-US");
             textIndexFiller = new TextIndexFiller();
+            textIndexSaver = new TextIndexSaver();
         }
 
 	    public string Directory
@@ -41,7 +40,6 @@ namespace CSharpQuery.IndexCreation
 
             LoadPhrasesIntoTheIndex(phrases, index);
 
-		    var textIndexSaver = new TextIndexSaver();
             textIndexSaver.Initialize(directory, name);
 		    textIndexSaver.SaveIndex(index);
 		}
