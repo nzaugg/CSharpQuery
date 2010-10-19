@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using CSharpQuery.Index;
 
-namespace CSharpQuery.Index
+namespace CSharpQuery.IndexCreation
 {
     public class TextIndexSaver
     {

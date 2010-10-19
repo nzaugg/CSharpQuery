@@ -71,6 +71,7 @@
     <Compile Include="FreeTextQuery.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="QueryResult.cs" />
+    <Compile Include="TextIndexSearcher.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Key.snk" />

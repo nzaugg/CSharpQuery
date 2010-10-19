@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
+using CSharpQuery.Index;
 
-namespace CSharpQuery.Index
+namespace CSharpQuery.QueryEngine
 {
     public class TextIndexSearcher
     {
