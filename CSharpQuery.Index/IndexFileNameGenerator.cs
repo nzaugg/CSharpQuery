@@ -5,22 +5,24 @@ namespace CSharpQuery.Index
 {
     public interface IIndexFileNameGenerator
     {
-        string GetIndexFileName(string name, string indexFolder);
+        string GetIndexFileName();
     }
 
     public class IndexFileNameGenerator : IIndexFileNameGenerator
     {
+        private readonly TextFileAccessContext textFileAccessContext;
         private CultureInfo cultureInfo;
 
-        public IndexFileNameGenerator()
+        public IndexFileNameGenerator(TextFileAccessContext textFileAccessContext)
         {
+            this.textFileAccessContext = textFileAccessContext;
             cultureInfo = new CultureInfo("en-US");
         }
 
-        public string GetIndexFileName(string name, string indexFolder)
+        public string GetIndexFileName()
         {
-            return Path.Combine(indexFolder,
-                                string.Format("Index_{0}.{1}.index", name, cultureInfo == CultureInfo.InvariantCulture ? "invarient" : cultureInfo.ToString()));
+            return Path.Combine(textFileAccessContext.Directory,
+                                string.Format("Index_{0}.{1}.index", textFileAccessContext.Name, cultureInfo == CultureInfo.InvariantCulture ? "invarient" : cultureInfo.ToString()));
         }
     }
 }

@@ -162,8 +162,7 @@ namespace CSharpQuery.QueryEngine {
                 //TextIndex index = new TextIndex();
                 //index.Initialize(databasePath, catalog);
 
-			    var textIndexLoader = new TextIndexLoader();
-                textIndexLoader.Initialize(databasePath, catalog);
+			    var textIndexLoader = new TextIndexLoader(new TextFileAccessContext{Directory = databasePath, Name = catalog});
                 var index = textIndexLoader.LoadIndex();
 
 				LockCookie lc = readerLock.UpgradeToWriterLock(1000 * 60); // 60 seconds!

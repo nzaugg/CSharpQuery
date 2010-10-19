@@ -25,10 +25,10 @@ namespace CSharpQuery.IndexCreation
 
 		public event RowInserted OnRowInserted;
 
-        public IndexCreator(IndexCreationContext indexCreationContext)
+        public IndexCreator(TextFileAccessContext textFileAccessContext)
         {
-            textIndexFiller = new TextIndexFiller(indexCreationContext);
-            textIndexSaver = new TextIndexSaver(indexCreationContext);
+            textIndexFiller = new TextIndexFiller(textFileAccessContext);
+            textIndexSaver = new TextIndexSaver(textFileAccessContext);
         }
 
 	    // 1) Load Table

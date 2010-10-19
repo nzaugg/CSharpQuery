@@ -15,18 +15,16 @@ namespace CSharpQuery.IndexCreation
     {
         private TextIndexFileInformation textIndexFileInformation;
         private IIndexFileNameGenerator indexFileNameGenerator;
-        private IndexCreationContext indexCreationContext;
 
-        public TextIndexSaver(IndexCreationContext indexCreationContext)
+        public TextIndexSaver(TextFileAccessContext textFileAccessContext)
         {
-            this.indexCreationContext = indexCreationContext;
-            indexFileNameGenerator = new IndexFileNameGenerator();
+            indexFileNameGenerator = new IndexFileNameGenerator(textFileAccessContext);
             textIndexFileInformation = new TextIndexFileInformation();
         }
 
         public void SaveIndex(TextIndex textIndex)
         {
-            string fileName = indexFileNameGenerator.GetIndexFileName(indexCreationContext.Name, indexCreationContext.Directory);
+            string fileName = indexFileNameGenerator.GetIndexFileName();
 
             if (File.Exists(fileName))
                 File.Delete(fileName);

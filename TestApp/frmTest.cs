@@ -132,7 +132,7 @@ namespace TestApp {
 
 		private void btnCreateIndex_Click(object sender, EventArgs e)
 		{
-		    var context = new IndexCreationContext {Directory = IndexDir, Name = "Bible"};
+		    var context = new TextFileAccessContext {Directory = IndexDir, Name = "Bible"};
 		    var creator = new IndexCreator(context);
 
 			string sql = "SELECT VerseID, VerseText FROM Verse";

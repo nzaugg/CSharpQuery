@@ -8,26 +8,18 @@ namespace CSharpQuery.QueryEngine
 {
     public class TextIndexLoader
     {
-        private string indexFolder;
-        private string name;
         private TextIndexFileInformation textIndexFileInformation;
         private IIndexFileNameGenerator indexFileNameGenerator;
 
-        public TextIndexLoader()
+        public TextIndexLoader(TextFileAccessContext textFileAccessContext)
         {
             textIndexFileInformation = new TextIndexFileInformation();
-            indexFileNameGenerator = new IndexFileNameGenerator();
-        }
-
-        public void Initialize(string databasePath, string name)
-        {
-            indexFolder = databasePath;
-            this.name = name;
+            indexFileNameGenerator = new IndexFileNameGenerator(textFileAccessContext);
         }
 
         public TextIndex LoadIndex()
         {
-            var filename = indexFileNameGenerator.GetIndexFileName(name, indexFolder);
+            var filename = indexFileNameGenerator.GetIndexFileName();
 
             var textIndex = new TextIndex();
 
