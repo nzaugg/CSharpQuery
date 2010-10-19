@@ -68,8 +68,6 @@
     <Compile Include="TextIndex.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TextIndexFileInformation.cs" />
-    <Compile Include="TextIndexFiller.cs" />
-    <Compile Include="TextIndexLoader.cs" />
     <Compile Include="WordRef.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -79,10 +77,6 @@
     <ProjectReference Include="..\CSharpQuery.Thesaurus\CSharpQuery.Thesaurus.csproj">
       <Project>{5CF0D0FF-596C-4F55-9F9F-0A58209E8EBE}</Project>
       <Name>CSharpQuery.Thesaurus</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\CSharpQuery.WordBreaker\CSharpQuery.WordBreaker.csproj">
-      <Project>{6D85265C-9393-4305-AA78-D08E1970078A}</Project>
-      <Name>CSharpQuery.WordBreaker</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

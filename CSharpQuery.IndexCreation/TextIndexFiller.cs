@@ -1,7 +1,8 @@
 ﻿using System.Collections.Generic;
+using CSharpQuery.Index;
 using CSharpQuery.WordBreaker;
 
-namespace CSharpQuery.Index
+namespace CSharpQuery.IndexCreation
 {
     public class TextIndexFiller
     {

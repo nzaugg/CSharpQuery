@@ -62,12 +62,17 @@
   <ItemGroup>
     <Compile Include="IndexCreator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TextIndexFiller.cs" />
     <Compile Include="TextIndexSaver.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CSharpQuery.Index\CSharpQuery.Index.csproj">
       <Project>{7F21CFCB-6478-40DF-8E9A-26550EAF6A7C}</Project>
       <Name>CSharpQuery.Index</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\CSharpQuery.WordBreaker\CSharpQuery.WordBreaker.csproj">
+      <Project>{6D85265C-9393-4305-AA78-D08E1970078A}</Project>
+      <Name>CSharpQuery.WordBreaker</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
