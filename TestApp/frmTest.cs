@@ -63,7 +63,8 @@ namespace TestApp {
 			// QUERY TEST
 			Stopwatch sw = Stopwatch.StartNew();
 
-            var freeTextQuery = new FreeTextQuery("Bible", path, new CultureInfo("en-US"));
+            //var freeTextQuery = new FreeTextQuery("Bible", path, new CultureInfo("en-US"));
+		    var freeTextQuery = new FreeTextQuery(new TextFileAccessContext("Bible", path, new CultureInfo("en-US")));
 
 			List<QueryResult> result = freeTextQuery.SearchFreeTextQuery(txtCriteria.Text);
 			sw.Stop();
@@ -132,7 +133,7 @@ namespace TestApp {
 
 		private void btnCreateIndex_Click(object sender, EventArgs e)
 		{
-		    var context = new TextFileAccessContext {Directory = IndexDir, Name = "Bible"};
+		    var context = new TextFileAccessContext("Bible", IndexDir, new CultureInfo("en-US"));
 		    var creator = new IndexCreator(context);
 
 			string sql = "SELECT VerseID, VerseText FROM Verse";

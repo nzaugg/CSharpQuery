@@ -16,9 +16,7 @@ using CSharpQuery.Thesaurus;
 
 namespace CSharpQuery.QueryEngine {
 	public class FreeTextQuery {
-	    private readonly string catalog;
-	    private readonly string databasePath;
-	    private readonly CultureInfo culture;
+	    private readonly TextFileAccessContext textFileAccessContext;
 	    private TextIndexSearcher textIndexSearcher;
 
 	    #region Fields - Query Tuning
@@ -33,12 +31,10 @@ namespace CSharpQuery.QueryEngine {
 		public static ReaderWriterLock readerLock = new ReaderWriterLock();
 		#endregion
 
-        public FreeTextQuery(string catalog, string databasePath, CultureInfo culture)
+        public FreeTextQuery(TextFileAccessContext textFileAccessContext)
 	    {
+            this.textFileAccessContext = textFileAccessContext;
             Indexes = new SortedList<string, TextIndex>();
-            this.catalog = catalog;
-            this.databasePath = databasePath;
-            this.culture = culture;
 
             textIndexSearcher = new TextIndexSearcher();
 	    }
@@ -58,13 +54,13 @@ namespace CSharpQuery.QueryEngine {
 
 		public List<QueryResult> SearchFreeTextQuery(string query, uint topNbyRank) {
 			readerLock.AcquireReaderLock(1000 * 60); // 60 second timeout
-			TextIndex index = GetTextIndex(catalog, culture);
+			TextIndex index = GetTextIndex();
 
 			// Get all of the words (front match)
-            List<Word> queryWordsList = (new DefaultWordBreaker() { DatabasePath = databasePath }).BreakWords(query);
+            List<Word> queryWordsList = (new DefaultWordBreaker() { DatabasePath = textFileAccessContext.Directory }).BreakWords(query);
 
 			Dictionary<Synonym, List<WordRef>> results = new Dictionary<Synonym, List<WordRef>>();
-			List<Synonym> words = (new DefaultThesaurus(culture){DatabasePath = databasePath}).Suggest(queryWordsList);
+            List<Synonym> words = (new DefaultThesaurus(textFileAccessContext.Culture) { DatabasePath = textFileAccessContext.Directory }).Suggest(queryWordsList);
 			WordRefEqualityComparer comp = new WordRefEqualityComparer();
 
 			foreach (Synonym word in words) {
@@ -75,7 +71,7 @@ namespace CSharpQuery.QueryEngine {
 					if (syn == word.OriginalWord)
 						continue;
 
-                    List<Word> synBreaker = (new DefaultWordBreaker() { DatabasePath = databasePath }).BreakWords(syn);
+                    List<Word> synBreaker = (new DefaultWordBreaker() { DatabasePath = textFileAccessContext.Directory }).BreakWords(syn);
 					List<WordRef> SubResults = new List<WordRef>();
 					bool FirstLoop = true;
 
@@ -121,10 +117,10 @@ namespace CSharpQuery.QueryEngine {
 
 		public List<QueryResult> SearchTextQuery(string catalog, CultureInfo culture, string query) {
 			readerLock.AcquireReaderLock(1000 * 60); // 60 second timeout
-			TextIndex index = GetTextIndex(catalog, culture);
+			TextIndex index = GetTextIndex();
 
 			// Get all of the words (front match)
-            List<Word> queryWordsList = (new DefaultWordBreaker() { DatabasePath = databasePath }).BreakWords(query);
+            List<Word> queryWordsList = (new DefaultWordBreaker() { DatabasePath = textFileAccessContext.Directory }).BreakWords(query);
 			List<Synonym> wordList = queryWordsList.Select(n => new Synonym() { OriginalWord = n.WordText }).ToList();
 
 			Dictionary<Synonym, List<WordRef>> results = new Dictionary<Synonym, List<WordRef>>();
@@ -153,8 +149,8 @@ namespace CSharpQuery.QueryEngine {
 
 		#region Private Methods
 		/// <remarks>This method assumes a reader lock has already been acquired before calling this method</remarks>
-		private TextIndex GetTextIndex(string catalog, CultureInfo culture) {
-			string indexKey = catalog + culture.ToString();
+		private TextIndex GetTextIndex() {
+			string indexKey = textFileAccessContext.Name + textFileAccessContext.Culture.ToString();
 			if (Indexes.Keys.Contains(indexKey))
 				return Indexes[indexKey];
 			else {
@@ -162,7 +158,7 @@ namespace CSharpQuery.QueryEngine {
                 //TextIndex index = new TextIndex();
                 //index.Initialize(databasePath, catalog);
 
-			    var textIndexLoader = new TextIndexLoader(new TextFileAccessContext{Directory = databasePath, Name = catalog});
+                var textIndexLoader = new TextIndexLoader(textFileAccessContext);
                 var index = textIndexLoader.LoadIndex();
 
 				LockCookie lc = readerLock.UpgradeToWriterLock(1000 * 60); // 60 seconds!
