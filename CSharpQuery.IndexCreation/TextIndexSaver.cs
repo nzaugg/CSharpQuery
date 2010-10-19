@@ -6,7 +6,15 @@ using CSharpQuery.Index;
 
 namespace CSharpQuery.IndexCreation
 {
-    public class TextIndexSaver
+    public interface ITextIndexSaver
+    {
+        void Initialize(string databasePath, string name);
+        string IndexFolder { get; }
+        string Name { get; }
+        void SaveIndex(TextIndex textIndex);
+    }
+
+    public class TextIndexSaver : ITextIndexSaver
     {
         private TextIndexFileInformation textIndexFileInformation;
         private IIndexFileNameGenerator indexFileNameGenerator;
