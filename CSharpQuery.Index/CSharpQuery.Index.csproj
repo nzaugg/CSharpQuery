@@ -62,7 +62,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BinarySearch.cs" />
     <Compile Include="IndexFileNameGenerator.cs" />
     <Compile Include="Phrase.cs" />
     <Compile Include="TextIndex.cs" />

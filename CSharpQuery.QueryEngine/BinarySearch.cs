@@ -5,11 +5,10 @@
  * Downloaded From: http://www.InteractiveASP.NET							*
  ****************************************************************************/
 
-using System;
 using System.Collections.Generic;
-using System.Text;
+using CSharpQuery.Index;
 
-namespace CSharpQuery.Index {
+namespace CSharpQuery.QueryEngine {
 	public class BinarySearch {
 	    private readonly SearchPredicateComparer searchMethod;
 
