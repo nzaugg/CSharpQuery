@@ -12,7 +12,7 @@ namespace CSharpQuery.IndexCreation
 {
 	public class IndexCreator
 	{
-	    private TextIndexFiller textIndexFiller;
+        private ITextIndexFiller textIndexFiller;
 	    private TextIndexSaver textIndexSaver;
 	    private string directory;
 

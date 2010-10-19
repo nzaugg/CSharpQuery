@@ -4,7 +4,13 @@ using CSharpQuery.WordBreaker;
 
 namespace CSharpQuery.IndexCreation
 {
-    public class TextIndexFiller
+    public interface ITextIndexFiller
+    {
+        void Initialize(string indexFolder);
+        void AddPhraseToIndex(TextIndex index, int key, string phrase);
+    }
+
+    public class TextIndexFiller : ITextIndexFiller
     {
         private string indexFolder;
 
