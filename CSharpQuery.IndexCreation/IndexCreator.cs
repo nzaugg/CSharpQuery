@@ -33,7 +33,7 @@ namespace CSharpQuery.IndexCreation
 		// 3) Save Index
 		public TextIndex CreateIndex(IEnumerable<Phrase> phrases) {
 			
-			var index = CreateAnIndex();
+			var index = new TextIndex();
 
             LoadPhrasesIntoTheIndex(phrases, index);
 
@@ -46,17 +46,12 @@ namespace CSharpQuery.IndexCreation
 	        foreach(var phrase in phrases)
             {
 	            AddPhrase(index, phrase);
-	            row++;
+                row++;
 	            FireRowInsertedEvent(row);
 	        }
 	    }
 
-	    private TextIndex CreateAnIndex()
-	    {
-	        return new TextIndex();
-	    }
-
-	    private void AddPhrase(TextIndex index, Phrase phrase)
+        private void AddPhrase(TextIndex index, Phrase phrase)
 	    {
 	        textIndexFiller.AddPhraseToIndex(index, phrase.Key, phrase.Text);
 	    }
