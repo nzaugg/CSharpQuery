@@ -141,7 +141,11 @@ namespace TestApp {
 			{
 				conn.Open();
 				SqlCeDataReader rdr = new SqlCeCommand(sql, conn).ExecuteReader();
-				creator.CreateIndex(new BibleVersuses(rdr));
+				var index = creator.CreateIndex(new BibleVersuses(rdr));
+
+                var textIndexSaver = new TextIndexSaver(context);
+                textIndexSaver.SaveIndex(index);
+
 				rdr.Close();
 			}
 		}
