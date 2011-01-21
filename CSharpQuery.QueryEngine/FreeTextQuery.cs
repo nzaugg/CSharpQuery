@@ -17,6 +17,7 @@ using CSharpQuery.Thesaurus;
 namespace CSharpQuery.QueryEngine {
 	public class FreeTextQuery {
 	    private readonly TextFileAccessContext textFileAccessContext;
+	    private readonly TextIndexReader textIndexReader;
 	    private TextIndexSearcher textIndexSearcher;
 
 	    #region Fields - Query Tuning
@@ -34,8 +35,8 @@ namespace CSharpQuery.QueryEngine {
         public FreeTextQuery(TextFileAccessContext textFileAccessContext)
 	    {
             this.textFileAccessContext = textFileAccessContext;
+            textIndexReader = new TextIndexReader(textFileAccessContext);
             Indexes = new SortedList<string, TextIndex>();
-
             textIndexSearcher = new TextIndexSearcher();
 	    }
 
@@ -54,9 +55,10 @@ namespace CSharpQuery.QueryEngine {
 
 		public List<QueryResult> SearchFreeTextQuery(string query, uint topNbyRank) {
 			readerLock.AcquireReaderLock(1000 * 60); // 60 second timeout
-			TextIndex index = GetTextIndex();
 
-			// Get all of the words (front match)
+            var index = GetTheTextIndex();
+
+		    // Get all of the words (front match)
             List<Word> queryWordsList = (new DefaultWordBreaker() { DatabasePath = textFileAccessContext.Directory }).BreakWords(query);
 
 			Dictionary<Synonym, List<WordRef>> results = new Dictionary<Synonym, List<WordRef>>();
@@ -115,9 +117,16 @@ namespace CSharpQuery.QueryEngine {
 			return RankResults(query, words, queryResults);
 		}
 
-		public List<QueryResult> SearchTextQuery(string catalog, CultureInfo culture, string query) {
+	    private TextIndex GetTheTextIndex()
+	    {
+	        var textIndexReader = new TextIndexReader(textFileAccessContext);
+	        return textIndexReader.GetTextIndex();
+	    }
+
+	    public List<QueryResult> SearchTextQuery(string catalog, CultureInfo culture, string query) {
 			readerLock.AcquireReaderLock(1000 * 60); // 60 second timeout
-			TextIndex index = GetTextIndex();
+		    var textIndexReader = new TextIndexReader(textFileAccessContext);
+		    TextIndex index = textIndexReader.GetTextIndex();
 
 			// Get all of the words (front match)
             List<Word> queryWordsList = (new DefaultWordBreaker() { DatabasePath = textFileAccessContext.Directory }).BreakWords(query);
@@ -147,28 +156,9 @@ namespace CSharpQuery.QueryEngine {
 			return RankResults(query, wordList, queryResult);
 		}
 
-		#region Private Methods
-		/// <remarks>This method assumes a reader lock has already been acquired before calling this method</remarks>
-		private TextIndex GetTextIndex() {
-			string indexKey = textFileAccessContext.Name + textFileAccessContext.Culture.ToString();
-			if (Indexes.Keys.Contains(indexKey))
-				return Indexes[indexKey];
-			else {
-				// Load the index!
-                //TextIndex index = new TextIndex();
-                //index.Initialize(databasePath, catalog);
+	    #region Private Methods
 
-                var textIndexLoader = new TextIndexLoader(textFileAccessContext);
-                var index = textIndexLoader.LoadIndex();
-
-				LockCookie lc = readerLock.UpgradeToWriterLock(1000 * 60); // 60 seconds!
-				Indexes.Add(indexKey, index);
-				readerLock.DowngradeFromWriterLock(ref lc);
-				return index;
-			}
-		}
-
-		/// <summary>
+	    /// <summary>
 		/// This function takes the raw list of words & results and the intersection list and combines the two
 		/// </summary>
 		/// <param name="results">The word lookup results</param>
@@ -330,4 +320,30 @@ namespace CSharpQuery.QueryEngine {
 		}
 		#endregion
 	}
+
+    public class TextIndexReader
+    {
+        private readonly TextFileAccessContext textFileAccessContext;
+
+        public TextIndexReader(TextFileAccessContext textFileAccessContext)
+        {
+            this.textFileAccessContext = textFileAccessContext;
+        }
+
+        public TextIndex GetTextIndex()
+        {
+            var indexKey = textFileAccessContext.Name + textFileAccessContext.Culture;
+
+            if (FreeTextQuery.Indexes.Keys.Contains(indexKey))
+                return FreeTextQuery.Indexes[indexKey];
+
+            var textIndexLoader = new TextIndexLoader(textFileAccessContext);
+            var index = textIndexLoader.LoadIndex();
+
+            var lc = FreeTextQuery.readerLock.UpgradeToWriterLock(1000 * 60); // 60 seconds!
+            FreeTextQuery.Indexes.Add(indexKey, index);
+            FreeTextQuery.readerLock.DowngradeFromWriterLock(ref lc);
+            return index;
+        }
+    }
 }
