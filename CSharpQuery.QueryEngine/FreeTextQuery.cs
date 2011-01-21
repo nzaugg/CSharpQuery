@@ -56,7 +56,7 @@ namespace CSharpQuery.QueryEngine {
 		public List<QueryResult> SearchFreeTextQuery(string query, uint topNbyRank) {
 			readerLock.AcquireReaderLock(1000 * 60); // 60 second timeout
 
-            var index = GetTheTextIndex();
+            var index = textIndexReader.GetTextIndex();
 
 		    // Get all of the words (front match)
             List<Word> queryWordsList = (new DefaultWordBreaker() { DatabasePath = textFileAccessContext.Directory }).BreakWords(query);
@@ -116,12 +116,6 @@ namespace CSharpQuery.QueryEngine {
 			// Rank the results!
 			return RankResults(query, words, queryResults);
 		}
-
-	    private TextIndex GetTheTextIndex()
-	    {
-	        var textIndexReader = new TextIndexReader(textFileAccessContext);
-	        return textIndexReader.GetTextIndex();
-	    }
 
 	    public List<QueryResult> SearchTextQuery(string catalog, CultureInfo culture, string query) {
 			readerLock.AcquireReaderLock(1000 * 60); // 60 second timeout
