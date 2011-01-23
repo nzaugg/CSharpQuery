@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSharpQuery.Thesaurus", "CS
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestApp", "TestApp\TestApp.csproj", "{C1C22A96-65E5-41FB-8762-CF705945E5F0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSharpQuery.Specs", "CSharpQuery.Specs\CSharpQuery.Specs.csproj", "{1C5B0959-013D-4261-88F5-E5F9C088F306}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -43,6 +45,10 @@ Global
 		{C1C22A96-65E5-41FB-8762-CF705945E5F0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C1C22A96-65E5-41FB-8762-CF705945E5F0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C1C22A96-65E5-41FB-8762-CF705945E5F0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1C5B0959-013D-4261-88F5-E5F9C088F306}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1C5B0959-013D-4261-88F5-E5F9C088F306}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1C5B0959-013D-4261-88F5-E5F9C088F306}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1C5B0959-013D-4261-88F5-E5F9C088F306}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
