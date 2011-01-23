@@ -11,18 +11,16 @@ namespace CSharpQuery.IndexCreation
 
     public class TextIndexFiller : ITextIndexFiller
     {
-        private readonly TextFileAccessContext textFileAccessContext;
+        private readonly IWordBreaker wordBreaker;
 
-        public TextIndexFiller(TextFileAccessContext textFileAccessContext)
+        public TextIndexFiller(IWordBreaker wordBreaker)
         {
-            this.textFileAccessContext = textFileAccessContext;
+            this.wordBreaker = wordBreaker;
         }
 
         public void AddPhraseToIndex(TextIndex index, int key, string phrase)
         {
-            // break the words
-            var words =
-                (new DefaultWordBreaker { DatabasePath = textFileAccessContext.Directory}).BreakWords(phrase);
+            var words = wordBreaker.BreakWords(phrase);
 
             if (words == null)
                 return;

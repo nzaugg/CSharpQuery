@@ -53,6 +53,7 @@
       <DependentUpon>Search.feature</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Steps\IndexingSteps.cs" />
     <Compile Include="Steps\PeopleSteps.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -61,7 +62,28 @@
       <LastGenOutput>Search.feature.cs</LastGenOutput>
     </None>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="..\CSharpQuery.IndexCreation\CSharpQuery.IndexCreation.csproj">
+      <Project>{703F14D8-D9A3-4972-908B-65C3C6ED21A7}</Project>
+      <Name>CSharpQuery.IndexCreation</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\CSharpQuery.Index\CSharpQuery.Index.csproj">
+      <Project>{7F21CFCB-6478-40DF-8E9A-26550EAF6A7C}</Project>
+      <Name>CSharpQuery.Index</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\CSharpQuery.QueryEngine\CSharpQuery.QueryEngine.csproj">
+      <Project>{22FFE007-B2D7-4CD5-BB04-F1BA0689500D}</Project>
+      <Name>CSharpQuery.QueryEngine</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\CSharpQuery.Thesaurus\CSharpQuery.Thesaurus.csproj">
+      <Project>{5CF0D0FF-596C-4F55-9F9F-0A58209E8EBE}</Project>
+      <Name>CSharpQuery.Thesaurus</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\CSharpQuery.WordBreaker\CSharpQuery.WordBreaker.csproj">
+      <Project>{6D85265C-9393-4305-AA78-D08E1970078A}</Project>
+      <Name>CSharpQuery.WordBreaker</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

@@ -15,7 +15,17 @@ using System.Linq;
 using System.Diagnostics;
 
 namespace CSharpQuery.WordBreaker {
-	/// <summary>
+    public interface IWordBreaker
+    {
+        /// <summary>
+        /// Breaks up words. See Class Notes
+        /// </summary>
+        /// <param name="phrase">Original Phrase to be broken</param>
+        /// <returns>Dictionary<string, int> string=word, int=Index In Phrase</returns>
+        List<Word> BreakWords(string phrase);
+    }
+
+    /// <summary>
 	/// Responsible for the creation of an Index.
 	/// This class will break a phrase into words.
 	/// It also has the responsibility of:
@@ -26,7 +36,8 @@ namespace CSharpQuery.WordBreaker {
 	/// The word breaker has configuration files that work
 	/// in both the gloabl and regional dialect.
 	/// </summary>
-	public class DefaultWordBreaker {
+	public class DefaultWordBreaker : IWordBreaker
+    {
 		protected Dictionary<string, string> substitutions;
 		protected List<char> whitespace;
 		protected Dictionary<string, string> noiseWords;

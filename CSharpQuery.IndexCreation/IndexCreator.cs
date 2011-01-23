@@ -17,18 +17,18 @@ namespace CSharpQuery.IndexCreation
 
     public class IndexCreator : IIndexCreator
     {
-        private ITextIndexFiller textIndexFiller;
+        private readonly ITextIndexFiller textIndexFiller;
 
 	    public delegate void RowInserted(int rowNum);
 
 		public event RowInserted OnRowInserted;
 
-        public IndexCreator(TextFileAccessContext textFileAccessContext)
+        public IndexCreator(ITextIndexFiller textIndexFiller)
         {
-            textIndexFiller = new TextIndexFiller(textFileAccessContext);
+            this.textIndexFiller = textIndexFiller;
         }
 
-	    // 1) Load Table
+        // 1) Load Table
 		// 2) Add items to index
 		// 3) Save Index
 		public TextIndex CreateIndex(IEnumerable<Phrase> phrases) {

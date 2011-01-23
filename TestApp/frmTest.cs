@@ -19,6 +19,7 @@ using System.Threading;
 using System.Configuration;
 using System.IO;
 using System.Data.SqlServerCe;
+using CSharpQuery.WordBreaker;
 
 namespace TestApp {
 	public partial class frmTest : Form {
@@ -143,7 +144,11 @@ namespace TestApp {
 
                 var context = new TextFileAccessContext("Bible", IndexDir, new CultureInfo("en-US"));
                 var textIndexSaver = new TextIndexSaver(context);
-                var indexCreator = new IndexCreator(context);
+
+                var wordBreaker = new DefaultWordBreaker { DatabasePath = context.Directory};
+
+                var textIndexFiller = new TextIndexFiller(wordBreaker);
+                var indexCreator = new IndexCreator(textIndexFiller);
 
 				var index = indexCreator.CreateIndex(new BibleVersuses(rdr));
                
