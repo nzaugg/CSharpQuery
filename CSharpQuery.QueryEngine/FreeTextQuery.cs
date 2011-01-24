@@ -1,315 +1,354 @@
-﻿/***** CSharpQuery **** By: Nathan Zaugg **** Created: 3/9/2009 *************
- * This software is licensed under Microsoft Public License (Ms-PL)			*
- * http://www.microsoft.com/opensource/licenses.mspx						*
- *																			*
- * Downloaded From: http://www.InteractiveASP.NET							*
- ****************************************************************************/
-
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using CSharpQuery.Index;
-using System.Threading;
 using System.Globalization;
-using CSharpQuery.WordBreaker;
+using System.Linq;
+using System.Threading;
+using CSharpQuery.Index;
 using CSharpQuery.Thesaurus;
+using CSharpQuery.WordBreaker;
 
-namespace CSharpQuery.QueryEngine {
-	public class FreeTextQuery {
-	    private readonly IWordBreaker wordBreaker;
-	    private readonly IThesaurus thesaurus;
-	    private TextIndexSearcher textIndexSearcher;
+namespace CSharpQuery.QueryEngine
+{
+    public class FreeTextQuery
+    {
+        private readonly IWordBreaker wordBreaker;
+        private readonly IThesaurus thesaurus;
+        private readonly IEqualityComparer<WordReference> wordReferenceEqualityComparer;
+        private readonly ITextIndexSearcher textIndexSearcher;
 
-	    #region Fields - Query Tuning
-		public static decimal WeightWordMatching = 0.60m;
-		public static decimal WeightLowPhraseIndex = 0.15m;
-		public static decimal WeightSearchTermsProximity = 0.15m;
-		public static decimal WeightMultipleOccurance = 0.10m;
-		#endregion
+        #region Fields - Query Tuning
 
-		#region Properties
-		public static SortedList<string, TextIndex> Indexes { get; set; }
-		public static ReaderWriterLock readerLock = new ReaderWriterLock();
-		#endregion
+        public static decimal WeightWordMatching = 0.60m;
+        public static decimal WeightLowPhraseIndex = 0.15m;
+        public static decimal WeightSearchTermsProximity = 0.15m;
+        public static decimal WeightMultipleOccurance = 0.10m;
 
-        public FreeTextQuery(IWordBreaker wordBreaker, IThesaurus thesaurus)
-	    {
+        #endregion
+
+        #region Properties
+
+        public static SortedList<string, TextIndex> Indexes { get; set; }
+        public static ReaderWriterLock readerLock = new ReaderWriterLock();
+
+        #endregion
+
+        public FreeTextQuery(IWordBreaker wordBreaker, 
+            IThesaurus thesaurus, 
+            IEqualityComparer<WordReference> wordReferenceEqualityComparer,
+            ITextIndexSearcher textIndexSearcher)
+        {
             this.wordBreaker = wordBreaker;
             this.thesaurus = thesaurus;
+            this.wordReferenceEqualityComparer = wordReferenceEqualityComparer;
             Indexes = new SortedList<string, TextIndex>();
-            textIndexSearcher = new TextIndexSearcher();
-	    }
+            this.textIndexSearcher = textIndexSearcher;
+        }
 
-		#region Public Static Methods
-		public static void ExpireCachedIndexes() {
-			readerLock.AcquireWriterLock(60 * 1000); // we'll wait 60 seconds for this!
-			Indexes.Clear();
-			GC.Collect(4); // include large object heap
-			readerLock.ReleaseWriterLock();
-		}
-		#endregion
+        #region Public Static Methods
 
-		public List<QueryResult> SearchFreeTextQuery(TextIndex textIndex, string query) {
+        public static void ExpireCachedIndexes()
+        {
+            readerLock.AcquireWriterLock(60*1000); // we'll wait 60 seconds for this!
+            Indexes.Clear();
+            GC.Collect(4); // include large object heap
+            readerLock.ReleaseWriterLock();
+        }
+
+        #endregion
+
+        public List<QueryResult> SearchFreeTextQuery(TextIndex textIndex, string query)
+        {
             return SearchFreeTextQuery(textIndex, query, uint.MaxValue);
-		}
+        }
 
-		public List<QueryResult> SearchFreeTextQuery(TextIndex textIndex, string query, uint topNbyRank) {
-			readerLock.AcquireReaderLock(1000 * 60); // 60 second timeout
+        public List<QueryResult> SearchFreeTextQuery(TextIndex textIndex, string query, uint topNbyRank)
+        {
+            readerLock.AcquireReaderLock(1000*60); // 60 second timeout
 
-            
+            var results = new Dictionary<Synonym, List<WordReference>>();
 
-		    // Get all of the words (front match)
-		    List<Word> queryWordsList = wordBreaker.BreakWords(query);
+            foreach (var word in GetTheWordsBeingSearchedFor(query))
+                results.Add(word, GetTheSearchResultsForThisWord(textIndex, word));
 
-			Dictionary<Synonym, List<WordReference>> results = new Dictionary<Synonym, List<WordReference>>();
-            List<Synonym> words = thesaurus.Suggest(queryWordsList);
-			WordRefEqualityComparer comp = new WordRefEqualityComparer();
+            readerLock.ReleaseReaderLock();
 
-			foreach (Synonym word in words) {
-				List<WordReference> res = textIndexSearcher.FrontMatch(textIndex, word.OriginalWord);
+            var rankedResults = RankTheResults(query, IntersectTheResults(results));
 
-				// Synonyms
-				foreach (string syn in word.SuggestedWords) {
-					if (syn == word.OriginalWord)
-						continue;
+            return rankedResults;
+        }
 
-                    List<Word> synBreaker = wordBreaker.BreakWords(syn);
-					List<WordReference> SubResults = new List<WordReference>();
-					bool FirstLoop = true;
+        private List<QueryResult> RankTheResults(string query, SortedList<int, QueryResult> queryResults)
+        {
+            return RankResults(query, GetTheWordsBeingSearchedFor(query), queryResults);
+        }
 
-					foreach (Word w in synBreaker) {
-						// maybe intersect the results here?
-						List<WordReference> lookup = textIndexSearcher.FindWord(textIndex, w.WordText);
-						if (lookup != null) {
-							if (FirstLoop) {
-								SubResults.AddRange(lookup);
-								FirstLoop = false;
-							} else
-								SubResults = SubResults.Intersect(lookup, comp).ToList();
-						}
-					}
+        private SortedList<int, QueryResult> IntersectTheResults(Dictionary<Synonym, List<WordReference>> results)
+        {
+            var resultList = new List<int>();
+            var firstTime = true;
+            foreach (var wrfs in results.Values)
+            {
+                if (firstTime)
+                {
+                    resultList = wrfs.Select(n => n.Key).ToList();
+                    firstTime = false;
+                    continue;
+                }
+                //resultList = resultList.Intersect(wrfs, comp).ToList();
+                resultList = resultList.Intersect(wrfs.Select(n => n.Key)).ToList();
+            }
 
-					// Add the matchie words
-					if ( SubResults != null )
-						res.AddRange(SubResults);
-				}
-				results.Add(word, res);
-			}
-			readerLock.ReleaseReaderLock();
-			// Intersect results
+            return PivitQuery(results, resultList);
+        }
 
-			// intersect the results
-			List<int> resultList = new List<int>();
-			bool firstTime = true;
-			foreach (List<WordReference> wrfs in results.Values) {
-				if (firstTime) {
-					resultList = wrfs.Select(n => n.Key).ToList();
-					firstTime = false;
-					continue;
-				}
-				//resultList = resultList.Intersect(wrfs, comp).ToList();
-				resultList = resultList.Intersect(wrfs.Select( n => n.Key )).ToList();
-			}
+        private List<WordReference> GetTheSearchResultsForThisWord(TextIndex textIndex, Synonym word)
+        {
+            var resultsForThisWord = textIndexSearcher.SearchTheIndex(textIndex, word.OriginalWord);
 
-			SortedList<int, QueryResult> queryResults = PivitQuery(results, resultList);
+            foreach (var suggestedWord in word.SuggestedWords)
+            {
+                if (suggestedWord == word.OriginalWord)
+                    continue;
 
-			// Rank the results!
-			return RankResults(query, words, queryResults);
-		}
+                var subResults = GetTheSearchResultsForTheSynonyms(textIndex, suggestedWord);
+                resultsForThisWord.AddRange(subResults);
+            }
+            return resultsForThisWord;
+        }
 
-	    public List<QueryResult> SearchTextQuery(TextIndex textIndex, string catalog, CultureInfo culture, string query) {
-			readerLock.AcquireReaderLock(1000 * 60); // 60 second timeout
+        private List<WordReference> GetTheSearchResultsForTheSynonyms(TextIndex textIndex, string suggestedWord)
+        {
+            var synonyms = wordBreaker.BreakWords(suggestedWord);
 
-			// Get all of the words (front match)
-            List<Word> queryWordsList = wordBreaker.BreakWords(query);
-			List<Synonym> wordList = queryWordsList.Select(n => new Synonym() { OriginalWord = n.WordText }).ToList();
+            var subResults = new List<WordReference>();
+            foreach (var synonym in synonyms)
+            {
+                var searchResults = textIndex[synonym.WordText];
+                if (subResults.Count() == 0)
+                    subResults.AddRange(searchResults);
+                else
+                    subResults = subResults.Intersect(searchResults, wordReferenceEqualityComparer).ToList();
+            }
+            return subResults;
+        }
 
-			Dictionary<Synonym, List<WordReference>> results = new Dictionary<Synonym, List<WordReference>>();
-			foreach (Synonym word in wordList) {
-				List<WordReference> res = textIndexSearcher.FindWord(textIndex, word.OriginalWord);
-				results.Add(word, res);
-			}
-			readerLock.ReleaseReaderLock();
+        private List<Synonym> GetTheWordsBeingSearchedFor(string query)
+        {
+            var queryWords = wordBreaker.BreakWords(query);
+            return thesaurus.Suggest(queryWords);
+        }
 
-			// intersect the results -- what word ref's contain all phrases searched for
-			List<int> resultList = new List<int>();
-			WordRefEqualityComparer comp = new WordRefEqualityComparer();
-			bool firstTime = true;
-			foreach (List<WordReference> wrfs in results.Values) {
-				if (firstTime) {
-					resultList = wrfs.Select(n => n.Key).ToList();
-					firstTime = false;
-					continue;
-				}
-				resultList = resultList.Intersect(wrfs.Select(n => n.Key)).ToList();
-			}
+        public List<QueryResult> SearchTextQuery(TextIndex textIndex, string catalog, CultureInfo culture, string query)
+        {
+            readerLock.AcquireReaderLock(1000*60); // 60 second timeout
 
-			SortedList<int, QueryResult> queryResult = PivitQuery(results, resultList);
-			return RankResults(query, wordList, queryResult);
-		}
+            var queryWordsList = wordBreaker.BreakWords(query);
+            var wordList = queryWordsList.Select(n => new Synonym {OriginalWord = n.WordText}).ToList();
 
-	    #region Private Methods
+            var results = new Dictionary<Synonym, List<WordReference>>();
+            foreach (var word in wordList)
+                results.Add(word, textIndex[word.OriginalWord]);
 
-	    /// <summary>
-		/// This function takes the raw list of words & results and the intersection list and combines the two
-		/// </summary>
-		/// <param name="results">The word lookup results</param>
-		/// <param name="resultList">The intersection of the results lists</param>
-		/// <returns>A SortedList(int, QueryResult) int: They [Key] value in the query; QueryResult: The matching words for that key</returns>
-		private static SortedList<int, QueryResult> PivitQuery(Dictionary<Synonym, List<WordReference>> results, List<int> resultList) {
-			// WordRef - Synonyms?
-			SortedList<int, QueryResult> queryResults = new SortedList<int, QueryResult>();
-			List<WordReference> sr = new List<WordReference>();
-			foreach (Synonym wrd in results.Keys) {
-				sr.AddRange(
-					results[wrd].Where(n => resultList.Contains(n.Key))
-				);
-			}
+            readerLock.ReleaseReaderLock();
 
-			foreach (WordReference wr in sr) {
-				if (queryResults.ContainsKey(wr.Key))
-					queryResults[wr.Key].WordIndexes.Add(wr);
-				else {
-					QueryResult q = new QueryResult() { Key = wr.Key, WordIndexes = new List<WordReference>() };
-					q.WordIndexes.Add(wr);
-					queryResults.Add(wr.Key, q);
-				}
-			}
-			return queryResults;
-		}
+            // intersect the results -- what word ref's contain all phrases searched for
+            var resultList = new List<int>();
+            var firstTime = true;
+            foreach (var wrfs in results.Values)
+            {
+                if (firstTime)
+                {
+                    resultList = wrfs.Select(n => n.Key).ToList();
+                    firstTime = false;
+                    continue;
+                }
+                resultList = resultList.Intersect(wrfs.Select(n => n.Key)).ToList();
+            }
 
-		private static List<QueryResult> RankResults(string query, List<Synonym> words, SortedList<int, QueryResult> queryResults) {
-			
-			foreach (int keyRef in queryResults.Keys) {
-				
-				// Rank this hit!
-				decimal searchTermsProximity = RankSearchTermsProximity(query, words, queryResults[keyRef]);
-				decimal wordMatching = RankWordMatching(query, words, queryResults[keyRef]);
-				decimal lowPhraseIndex = RankLowPhraseIndex(query, words, queryResults[keyRef]);
-				decimal multipleOccurance = RankMultipleOccurance(query, words, queryResults[keyRef]);
+            var queryResult = PivitQuery(results, resultList);
+            return RankResults(query, wordList, queryResult);
+        }
 
-				decimal rank = (searchTermsProximity * WeightSearchTermsProximity) +
-								(wordMatching * WeightWordMatching) +
-								(lowPhraseIndex * WeightLowPhraseIndex) +
-								(multipleOccurance * WeightMultipleOccurance);
-				QueryResult r = queryResults[keyRef];
-				r.Rank = rank;
+        #region Private Methods
 
-				r.searchTermsProximity = searchTermsProximity;
-				r.wordMatching = wordMatching;
-				r.lowPhraseIndex = lowPhraseIndex;
-				r.multipleOccurance = multipleOccurance;
-			}			
+        /// <summary>
+        ///   This function takes the raw list of words & results and the intersection list and combines the two
+        /// </summary>
+        /// <param name = "results">The word lookup results</param>
+        /// <param name = "resultList">The intersection of the results lists</param>
+        /// <returns>A SortedList(int, QueryResult) int: They [Key] value in the query; QueryResult: The matching words for that key</returns>
+        private static SortedList<int, QueryResult> PivitQuery(Dictionary<Synonym, List<WordReference>> results, List<int> resultList)
+        {
+            // WordRef - Synonyms?
+            var queryResults = new SortedList<int, QueryResult>();
+            var sr = new List<WordReference>();
+            foreach (var wrd in results.Keys)
+            {
+                sr.AddRange(
+                    results[wrd].Where(n => resultList.Contains(n.Key))
+                    );
+            }
 
-			// Go through each and make sure they only contain
-			return queryResults.Values.OrderByDescending(n => n.Rank).ToList();
-		}
+            foreach (var wr in sr)
+            {
+                if (queryResults.ContainsKey(wr.Key))
+                    queryResults[wr.Key].WordIndexes.Add(wr);
+                else
+                {
+                    var q = new QueryResult {Key = wr.Key, WordIndexes = new List<WordReference>()};
+                    q.WordIndexes.Add(wr);
+                    queryResults.Add(wr.Key, q);
+                }
+            }
+            return queryResults;
+        }
 
-		private static decimal Normalize(decimal value) {
-			if (value < 0)
-				return 0;
-			if (value > 1)
-				return 1;
-			return Math.Round(value, 4);
-		}
+        private static List<QueryResult> RankResults(string query, List<Synonym> words, SortedList<int, QueryResult> queryResults)
+        {
+            foreach (var keyRef in queryResults.Keys)
+            {
+                // Rank this hit!
+                var searchTermsProximity = RankSearchTermsProximity(query, words, queryResults[keyRef]);
+                var wordMatching = RankWordMatching(query, words, queryResults[keyRef]);
+                var lowPhraseIndex = RankLowPhraseIndex(query, words, queryResults[keyRef]);
+                var multipleOccurance = RankMultipleOccurance(query, words, queryResults[keyRef]);
 
-		private static decimal RankMultipleOccurance(string query, List<Synonym> words, QueryResult queryResult) {
-			// Only use the original words
-			decimal WordCount = 0;
-			foreach (Synonym word in words) {
-				// Piano Jazz
-				// Sum all of the piano's, then all of the "jazz"				
-				// Exact match word = 2 points
+                var rank = (searchTermsProximity*WeightSearchTermsProximity) +
+                           (wordMatching*WeightWordMatching) +
+                           (lowPhraseIndex*WeightLowPhraseIndex) +
+                           (multipleOccurance*WeightMultipleOccurance);
+                var r = queryResults[keyRef];
+                r.Rank = rank;
 
-				WordCount += (from q in queryResult.WordIndexes
-						   where q.Word.Equals(word.OriginalWord, StringComparison.CurrentCultureIgnoreCase)
-						   select q).Count();
-			}
+                r.searchTermsProximity = searchTermsProximity;
+                r.wordMatching = wordMatching;
+                r.lowPhraseIndex = lowPhraseIndex;
+                r.multipleOccurance = multipleOccurance;
+            }
 
-			int totalWords = (words.Count == 0 ? 1 : words.Count);
-			decimal rank = ((WordCount + queryResult.WordIndexes.Count) / totalWords) / 10;
-			return Normalize(rank);
-		}
+            // Go through each and make sure they only contain
+            return queryResults.Values.OrderByDescending(n => n.Rank).ToList();
+        }
 
-		private static decimal RankLowPhraseIndex(string query, List<Synonym> words, QueryResult queryResult) {
-			// The sum of the pos
-			decimal posVal = 0;
-			foreach (WordReference wr in queryResult.WordIndexes) {
-				int val = (wr.PhraseIndex - wr.Word.Length);
-				if (val > 0)
-					posVal += val;
-			}
+        private static decimal Normalize(decimal value)
+        {
+            if (value < 0)
+                return 0;
+            if (value > 1)
+                return 1;
+            return Math.Round(value, 4);
+        }
 
-			decimal result = (words.Count / ((posVal / words.Count) + 1)) * (words.Count * 2);
-			return Normalize(result);
-		}
+        private static decimal RankMultipleOccurance(string query, List<Synonym> words, QueryResult queryResult)
+        {
+            // Only use the original words
+            decimal WordCount = 0;
+            foreach (var word in words)
+            {
+                // Piano Jazz
+                // Sum all of the piano's, then all of the "jazz"				
+                // Exact match word = 2 points
 
-		private static decimal RankWordMatching(string query, List<Synonym> words, QueryResult queryResult) {
-			// Original serch terms.  
-			// The first search term gets more weight
-			// If it contains all of the original search words (exactly) then 1
-			// If it contains x / y; return x / y
+                WordCount += (from q in queryResult.WordIndexes
+                              where q.Word.Equals(word.OriginalWord, StringComparison.CurrentCultureIgnoreCase)
+                              select q).Count();
+            }
 
-			// Contains words in right order = .6
-			// Contains all words in the search query = .4
-			// Contains syninym words in the right order = ?
+            var totalWords = (words.Count == 0 ? 1 : words.Count);
+            var rank = ((WordCount + queryResult.WordIndexes.Count)/totalWords)/10;
+            return Normalize(rank);
+        }
 
-			// Contains words in right order = .6
-			bool rightOrder = true;
-			bool containsAllWords = true;
-			int lastIndex = -1;
-			foreach (Synonym word in words) {
-				WordReference wrdIndx = queryResult.WordIndexes.Where(n => n.Word == word.OriginalWord).FirstOrDefault();
-				if (wrdIndx != null) {
-					if (lastIndex < wrdIndx.PhraseIndex)
-						lastIndex = wrdIndx.PhraseIndex;
-					else {
-						rightOrder = false;
-						break;
-					}
-				} else {
-					containsAllWords = false;
-					break;
-				}
-			}
+        private static decimal RankLowPhraseIndex(string query, List<Synonym> words, QueryResult queryResult)
+        {
+            // The sum of the pos
+            decimal posVal = 0;
+            foreach (var wr in queryResult.WordIndexes)
+            {
+                var val = (wr.PhraseIndex - wr.Word.Length);
+                if (val > 0)
+                    posVal += val;
+            }
 
-			// Contains all words in the search query
-			//int wordCount = 0;
-			//foreach (Synonym wrd in words) {
-			//    if ((from q in queryResult.WordIndexes
-			//         where q.Word.Equals(wrd.OriginalWord, StringComparison.CurrentCultureIgnoreCase)
-			//         select q).Count() >= 1)
-			//        wordCount++;
-			//}
+            var result = (words.Count/((posVal/words.Count) + 1))*(words.Count*2);
+            return Normalize(result);
+        }
 
-			//decimal result = ((wordCount + 1) / (words.Count + 1));
+        private static decimal RankWordMatching(string query, List<Synonym> words, QueryResult queryResult)
+        {
+            // Original serch terms.  
+            // The first search term gets more weight
+            // If it contains all of the original search words (exactly) then 1
+            // If it contains x / y; return x / y
 
-			decimal result = (rightOrder ? 0.6m : 0m) + (containsAllWords ? .4m : 0m);
-			return Normalize(result);
-		}
+            // Contains words in right order = .6
+            // Contains all words in the search query = .4
+            // Contains syninym words in the right order = ?
 
-		private static decimal RankSearchTermsProximity(string query, List<Synonym> words, QueryResult queryResult) {
-			// Not counting the thesaurus looked up words, 
-			// How close together are the search terms? Are they right next to each other?
+            // Contains words in right order = .6
+            var rightOrder = true;
+            var containsAllWords = true;
+            var lastIndex = -1;
+            foreach (var word in words)
+            {
+                var wrdIndx = queryResult.WordIndexes.Where(n => n.Word == word.OriginalWord).FirstOrDefault();
+                if (wrdIndx != null)
+                {
+                    if (lastIndex < wrdIndx.PhraseIndex)
+                        lastIndex = wrdIndx.PhraseIndex;
+                    else
+                    {
+                        rightOrder = false;
+                        break;
+                    }
+                }
+                else
+                {
+                    containsAllWords = false;
+                    break;
+                }
+            }
 
-			List<WordReference> wr = (from q in queryResult.WordIndexes orderby q.PhraseIndex select q).ToList();
+            // Contains all words in the search query
+            //int wordCount = 0;
+            //foreach (Synonym wrd in words) {
+            //    if ((from q in queryResult.WordIndexes
+            //         where q.Word.Equals(wrd.OriginalWord, StringComparison.CurrentCultureIgnoreCase)
+            //         select q).Count() >= 1)
+            //        wordCount++;
+            //}
 
-			int distance = 0;
-			for (int i = 0; i < wr.Count-1; i++) {
-				WordReference w1 = wr[i];
-				WordReference w2 = wr[i + 1];
+            //decimal result = ((wordCount + 1) / (words.Count + 1));
 
-				// Distance between these two?
-				int d = ((w1.PhraseIndex - w1.Word.Length) + (w2.PhraseIndex - w2.Word.Length));
-				if (d < 0)
-					continue;
-				else
-					distance += d;
-			}
+            var result = (rightOrder ? 0.6m : 0m) + (containsAllWords ? .4m : 0m);
+            return Normalize(result);
+        }
 
-			decimal result = (words.Count / ((distance + words.Count) + 1.0m)) * (words.Count * 2);
-			return Normalize(result);
-		}
-		#endregion
-	}
+        private static decimal RankSearchTermsProximity(string query, List<Synonym> words, QueryResult queryResult)
+        {
+            // Not counting the thesaurus looked up words, 
+            // How close together are the search terms? Are they right next to each other?
+
+            var wr = (from q in queryResult.WordIndexes orderby q.PhraseIndex select q).ToList();
+
+            var distance = 0;
+            for (var i = 0; i < wr.Count - 1; i++)
+            {
+                var w1 = wr[i];
+                var w2 = wr[i + 1];
+
+                // Distance between these two?
+                var d = ((w1.PhraseIndex - w1.Word.Length) + (w2.PhraseIndex - w2.Word.Length));
+                if (d < 0)
+                    continue;
+                else
+                    distance += d;
+            }
+
+            var result = (words.Count/((distance + words.Count) + 1.0m))*(words.Count*2);
+            return Normalize(result);
+        }
+
+        #endregion
+    }
 }

@@ -30,7 +30,7 @@ namespace CSharpQuery.Specs.Steps
                 Substitutions = new Dictionary<string, string>(),
                 Whitespace = new List<char>()});
 
-            var query = new FreeTextQuery(new DefaultWordBreaker(wordBreakingInformationRetriever.Object), thesaurus);
+            var query = new FreeTextQuery(new DefaultWordBreaker(wordBreakingInformationRetriever.Object), thesaurus, new WordRefEqualityComparer(), new TextIndexSearcher());
             var results = query.SearchFreeTextQuery(index, searchTerm);
 
             ScenarioContext.Current.Set(results.Select(x=>x));
