@@ -63,8 +63,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DefaultWordBreaker.cs" />
+    <Compile Include="IWordBreaker.cs" />
+    <Compile Include="IWordBreakingInformationRetriever.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Word.cs" />
+    <Compile Include="WordBreakingInformation.cs" />
+    <Compile Include="WordBreakingInformationRetriever.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Key.snk" />

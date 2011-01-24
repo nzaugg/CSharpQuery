@@ -69,8 +69,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DefaultThesaurus.cs" />
+    <Compile Include="IThesaurus.cs" />
+    <Compile Include="IThesaurusDictionaryRetriever.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Synonym.cs" />
+    <Compile Include="ThesaurusDictionaryRetriever.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Key.snk" />
