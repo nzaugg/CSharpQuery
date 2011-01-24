@@ -28,7 +28,7 @@ namespace CSharpQuery.IndexCreation
             // add the words to the index
             foreach (var wrd in words)
             {
-                var reference = new WordRef(wrd.WordText, key, wrd.Index);
+                var reference = new WordRef {Word = wrd.WordText, Key = key, PhraseIndex = wrd.Index};
                 if (!index.ContainsKey(wrd.WordText))
                     index.Add(wrd.WordText, new List<WordRef>(new[] {reference}));
                 else

@@ -64,7 +64,7 @@ namespace CSharpQuery.QueryEngine
                 var rsIdx = Field.IndexOf(textIndexFileInformation.FieldInfoDelimeter);
                 var key = int.Parse(Field.Substring(1, rsIdx - 1));
                 var pos = int.Parse(Field.Substring(rsIdx + 1));
-                results.Add(new WordRef(word, key, pos));
+                results.Add(new WordRef {Word = word, Key = key, PhraseIndex = pos});
 
                 fieldStartIdx = record.IndexOf(textIndexFileInformation.BeginField, fieldEndIdx);
                 fieldEndIdx = record.IndexOf(textIndexFileInformation.EndField,
