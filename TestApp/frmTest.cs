@@ -69,9 +69,10 @@ namespace TestApp {
 		    //var freeTextQuery = new FreeTextQuery(new TextFileAccessContext("Bible", path, new CultureInfo("en-US")));
 
 		    var context = new TextFileAccessContext("Bible", path, new CultureInfo("en-US"));
-		    var freeTextQuery = new FreeTextQuery(new TextIndexReader(context), new DefaultWordBreaker(new WordBreakingInformationRetriever(context.Directory, context.Culture)), new DefaultThesaurus(new ThesaurusDictionaryRetriever(context.Directory)));
+		    var textIndexReader = new TextIndexReader(context);
+		    var freeTextQuery = new FreeTextQuery(new DefaultWordBreaker(new WordBreakingInformationRetriever(context.Directory, context.Culture)), new DefaultThesaurus(new ThesaurusDictionaryRetriever(context.Directory)));
 
-			List<QueryResult> result = freeTextQuery.SearchFreeTextQuery(txtCriteria.Text);
+			List<QueryResult> result = freeTextQuery.SearchFreeTextQuery(textIndexReader.GetTextIndex(), txtCriteria.Text);
 			sw.Stop();
 
 			previousQuery = result;

@@ -18,7 +18,6 @@ namespace CSharpQuery.QueryEngine {
 	public class FreeTextQuery {
 	    private readonly IWordBreaker wordBreaker;
 	    private readonly IThesaurus thesaurus;
-        private readonly ITextIndexReader textIndexReader;
 	    private TextIndexSearcher textIndexSearcher;
 
 	    #region Fields - Query Tuning
@@ -33,13 +32,10 @@ namespace CSharpQuery.QueryEngine {
 		public static ReaderWriterLock readerLock = new ReaderWriterLock();
 		#endregion
 
-        public FreeTextQuery(ITextIndexReader textIndexReader,
-            IWordBreaker wordBreaker,
-            IThesaurus thesaurus)
+        public FreeTextQuery(IWordBreaker wordBreaker, IThesaurus thesaurus)
 	    {
             this.wordBreaker = wordBreaker;
             this.thesaurus = thesaurus;
-            this.textIndexReader = textIndexReader;
             Indexes = new SortedList<string, TextIndex>();
             textIndexSearcher = new TextIndexSearcher();
 	    }
@@ -53,14 +49,14 @@ namespace CSharpQuery.QueryEngine {
 		}
 		#endregion
 
-		public List<QueryResult> SearchFreeTextQuery(string query) {
-			return SearchFreeTextQuery(query, uint.MaxValue);
+		public List<QueryResult> SearchFreeTextQuery(TextIndex textIndex, string query) {
+            return SearchFreeTextQuery(textIndex, query, uint.MaxValue);
 		}
 
-		public List<QueryResult> SearchFreeTextQuery(string query, uint topNbyRank) {
+		public List<QueryResult> SearchFreeTextQuery(TextIndex textIndex, string query, uint topNbyRank) {
 			readerLock.AcquireReaderLock(1000 * 60); // 60 second timeout
 
-            var index = textIndexReader.GetTextIndex();
+            
 
 		    // Get all of the words (front match)
 		    List<Word> queryWordsList = wordBreaker.BreakWords(query);
@@ -70,7 +66,7 @@ namespace CSharpQuery.QueryEngine {
 			WordRefEqualityComparer comp = new WordRefEqualityComparer();
 
 			foreach (Synonym word in words) {
-				List<WordRef> res = textIndexSearcher.FrontMatch(index, word.OriginalWord);
+				List<WordRef> res = textIndexSearcher.FrontMatch(textIndex, word.OriginalWord);
 
 				// Synonyms
 				foreach (string syn in word.SuggestedWords) {
@@ -83,7 +79,7 @@ namespace CSharpQuery.QueryEngine {
 
 					foreach (Word w in synBreaker) {
 						// maybe intersect the results here?
-						List<WordRef> lookup = textIndexSearcher.FindWord(index, w.WordText);
+						List<WordRef> lookup = textIndexSearcher.FindWord(textIndex, w.WordText);
 						if (lookup != null) {
 							if (FirstLoop) {
 								SubResults.AddRange(lookup);
@@ -121,9 +117,8 @@ namespace CSharpQuery.QueryEngine {
 			return RankResults(query, words, queryResults);
 		}
 
-	    public List<QueryResult> SearchTextQuery(string catalog, CultureInfo culture, string query) {
+	    public List<QueryResult> SearchTextQuery(TextIndex textIndex, string catalog, CultureInfo culture, string query) {
 			readerLock.AcquireReaderLock(1000 * 60); // 60 second timeout
-		    TextIndex index = textIndexReader.GetTextIndex();
 
 			// Get all of the words (front match)
             List<Word> queryWordsList = wordBreaker.BreakWords(query);
@@ -131,7 +126,7 @@ namespace CSharpQuery.QueryEngine {
 
 			Dictionary<Synonym, List<WordRef>> results = new Dictionary<Synonym, List<WordRef>>();
 			foreach (Synonym word in wordList) {
-				List<WordRef> res = textIndexSearcher.FindWord(index, word.OriginalWord);
+				List<WordRef> res = textIndexSearcher.FindWord(textIndex, word.OriginalWord);
 				results.Add(word, res);
 			}
 			readerLock.ReleaseReaderLock();

@@ -19,10 +19,6 @@ namespace CSharpQuery.Specs.Steps
         {
             var index = ScenarioContext.Current.Get<TextIndex>();
 
-            var reader = new Mock<ITextIndexReader>();
-            reader.Setup(x => x.GetTextIndex())
-                .Returns(index);
-
             var mock = new Mock<IThesaurusDictionaryRetriever>();
             mock.Setup(x => x.GetThesaurus())
                 .Returns(new SortedList<string, SortedList<string, int>>());
@@ -34,8 +30,8 @@ namespace CSharpQuery.Specs.Steps
                 Substitutions = new Dictionary<string, string>(),
                 Whitespace = new List<char>()});
 
-            var query = new FreeTextQuery(reader.Object, new DefaultWordBreaker(wordBreakingInformationRetriever.Object), thesaurus);
-            var results = query.SearchFreeTextQuery(searchTerm);
+            var query = new FreeTextQuery(new DefaultWordBreaker(wordBreakingInformationRetriever.Object), thesaurus);
+            var results = query.SearchFreeTextQuery(index, searchTerm);
 
             ScenarioContext.Current.Set(results.Select(x=>x));
         }
