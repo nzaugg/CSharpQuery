@@ -20,79 +20,101 @@ namespace CSharpQuery.Thesaurus {
         List<Synonym> Suggest(List<Word> searchWords);
     }
 
-    public class DefaultThesaurus : IThesaurus
+    public interface IThesaurusDictionaryRetriever
+    {
+        SortedList<string, SortedList<string, int>> GetThesaurus();
+    }
+
+    public class ThesaurusDictionaryRetriever : IThesaurusDictionaryRetriever
     {
         private readonly string databasePath;
         protected SortedList<string, SortedList<string, int>> thesaurusDictionary;
 
-		protected bool initialized;
+        public ThesaurusDictionaryRetriever(string databasePath)
+        {
+            this.databasePath = databasePath;
+        }
 
-		public DefaultThesaurus(string databasePath)
-		{
-		    this.databasePath = databasePath;
-		    thesaurusDictionary = new SortedList<string, SortedList<string, int>>();
-		}
-
-        public void Initialize() {
-			initialized = true;
-
-			// Thesaurus.global.xml
+        public SortedList<string, SortedList<string, int>> GetThesaurus()
+        {
+            // Thesaurus.global.xml
             string filename = Path.Combine(databasePath, "Thesaurus.global.xml");
-			LoadThesaurus(filename);
+            LoadThesaurus(filename);
 
-			// Thesaurus.en-US.xml
+            // Thesaurus.en-US.xml
             filename = Path.Combine(databasePath, "Thesaurus.global.xml");
-			LoadThesaurus(filename);
+            LoadThesaurus(filename);
+
+            return thesaurusDictionary;
+        }
+
+        private void LoadThesaurus(string filename)
+        {
+
+            if (!File.Exists(filename))
+                return;
+            // Sample XML
+            //<XML ID="Microsoft Search Thesaurus">
+            //    <thesaurus xmlns="x-schema:tsSchema.xml">
+            //    <diacritics_sensitive>0</diacritics_sensitive>
+            //        <expansion>
+            //            <sub>abduct ion</sub>
+            //            <sub>abduction</sub>
+            //        </expansion>
+            //        <expansion>
+            //            <sub>abe lard</sub>
+            //            <sub>abelard</sub>
+            //        </expansion>
+            //    </thesaurus>
+            //</XML>
+
+            // Read the XML
+            XDocument xmlDoc = XDocument.Load(new StreamReader(File.Open(filename, FileMode.Open, FileAccess.Read, FileShare.Read)));
+
+            var query = from e in xmlDoc.Descendants("expansion")
+                        select e;
+
+            foreach (XElement element in query)
+            {
+                List<string> subs = (from s in element.Descendants("sub")
+                                     select s.Value).ToList();
+                SortedList<string, int> syns = new SortedList<string, int>();
+                foreach (string syn in subs)
+                    syns.Add(syn, 0);
+
+                foreach (string wrd in syns.Keys)
+                {
+                    if (thesaurusDictionary.ContainsKey(wrd))
+                    {
+                        foreach (string w in syns.Keys)
+                        {
+                            if (thesaurusDictionary.ContainsKey(w))
+                                continue;
+                            thesaurusDictionary[wrd].Add(w, 0);
+                        }
+                    }
+                    else
+                        thesaurusDictionary.Add(wrd, syns);
+                }
+            }
+        }
+
+    }
+
+    public class DefaultThesaurus : IThesaurus
+    {
+        private readonly IThesaurusDictionaryRetriever thesaurusDictionaryRetriever;
+
+		public DefaultThesaurus(IThesaurusDictionaryRetriever thesaurusDictionaryRetriever)
+		{
+		    this.thesaurusDictionaryRetriever = thesaurusDictionaryRetriever;
 		}
 
-		private void LoadThesaurus(string filename) {
 
-			if (!File.Exists(filename))
-				return;
-			// Sample XML
-			//<XML ID="Microsoft Search Thesaurus">
-			//    <thesaurus xmlns="x-schema:tsSchema.xml">
-			//    <diacritics_sensitive>0</diacritics_sensitive>
-			//        <expansion>
-			//            <sub>abduct ion</sub>
-			//            <sub>abduction</sub>
-			//        </expansion>
-			//        <expansion>
-			//            <sub>abe lard</sub>
-			//            <sub>abelard</sub>
-			//        </expansion>
-			//    </thesaurus>
-			//</XML>
+		public List<Synonym> Suggest(List<Word> searchWords)
+		{
 
-			// Read the XML
-			XDocument xmlDoc = XDocument.Load(new StreamReader(File.Open(filename, FileMode.Open, FileAccess.Read, FileShare.Read)));
-
-			var query = from e in xmlDoc.Descendants("expansion")
-						select e;
-
-			foreach (XElement element in query) {
-				List<string> subs = (from s in element.Descendants("sub")
-									 select s.Value).ToList();
-				SortedList<string, int> syns = new SortedList<string,int>();
-				foreach ( string syn in subs)
-					syns.Add(syn, 0);
-
-				foreach (string wrd in syns.Keys) {
-					if (thesaurusDictionary.ContainsKey(wrd)) {
-						foreach (string w in syns.Keys) {
-							if (thesaurusDictionary.ContainsKey(w))
-								continue;
-							thesaurusDictionary[wrd].Add(w, 0);
-						}
-					} else
-						thesaurusDictionary.Add(wrd, syns);
-				}
-			}
-		}
-
-		public List<Synonym> Suggest(List<Word> searchWords) {
-			if (!initialized)
-				Initialize();
+		    var thesaurusDictionary = thesaurusDictionaryRetriever.GetThesaurus();
 
 			List<Synonym> results = new List<Synonym>();
 			List<string> removeWords = new List<string>();
