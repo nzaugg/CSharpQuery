@@ -145,7 +145,7 @@ namespace TestApp {
                 var context = new TextFileAccessContext("Bible", IndexDir, new CultureInfo("en-US"));
                 var textIndexSaver = new TextIndexSaver(context);
 
-                var wordBreaker = new DefaultWordBreaker { DatabasePath = context.Directory};
+                var wordBreaker = new DefaultWordBreaker(new WordBreakingInformationRetriever(context.Directory, context.Culture)) { DatabasePath = context.Directory};
 
                 var textIndexFiller = new TextIndexFiller(wordBreaker);
                 var indexCreator = new IndexCreator(textIndexFiller);

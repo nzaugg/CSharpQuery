@@ -2,7 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using CSharpQuery.Index;
 using CSharpQuery.IndexCreation;
+using CSharpQuery.WordBreaker;
+using Moq;
 using TechTalk.SpecFlow;
 
 namespace CSharpQuery.Specs.Steps
@@ -15,24 +18,19 @@ namespace CSharpQuery.Specs.Steps
         {
             var people = ScenarioContext.Current.Get<IEnumerable<Person>>();
 
-            //var indexCreator = new IndexCreator(new Mock);
+            var mock = new Mock<IWordBreakingInformationRetriever>();
+            mock.Setup(x => x.GetWordBreakingInformation())
+                .Returns(new WordBreakingInformation{NoiseWords = new Dictionary<string, string>(),
+                Substitutions = new Dictionary<string, string>(),
+                Whitespace = new List<char>()});
 
-            //string sql = "SELECT VerseID, VerseText FROM Verse";
-            //using (SqlCeConnection conn = new SqlCeConnection(ConfigurationManager.ConnectionStrings["ConnectionString"].ConnectionString))
-            //{
-            //    conn.Open();
-            //    var rdr = new SqlCeCommand(sql, conn).ExecuteReader();
+            var indexCreator = new IndexCreator(new TextIndexFiller(new DefaultWordBreaker(mock.Object)));
 
-            //    var context = new TextFileAccessContext("Bible", IndexDir, new CultureInfo("en-US"));
-            //    var textIndexSaver = new TextIndexSaver(context);
-            //    var indexCreator = new IndexCreator(context);
+            var phrases = people.Select(x => new Phrase {Key = x.Key, Text = x.FirstName + " " + x.LastName});
 
-            //    var index = indexCreator.CreateIndex(new BibleVersuses(rdr));
+            var index = indexCreator.CreateIndex(phrases);
 
-            //    textIndexSaver.SaveIndex(index);
-
-            //    rdr.Close();
-            //}
+            ScenarioContext.Current.Set(index);
         }
     }
 }

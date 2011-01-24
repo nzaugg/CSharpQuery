@@ -25,6 +25,134 @@ namespace CSharpQuery.WordBreaker {
         List<Word> BreakWords(string phrase);
     }
 
+    public interface IWordBreakingInformationRetriever
+    {
+        WordBreakingInformation GetWordBreakingInformation();
+    }
+
+    public class WordBreakingInformationRetriever : IWordBreakingInformationRetriever
+    {
+        private IDictionary<string, string> substitutions = new Dictionary<string, string>();
+        private IList<char> whitespace = new List<char>();
+        private IDictionary<string, string> noiseWords = new Dictionary<string, string>();
+        private string databasePath;
+        private readonly CultureInfo cultureInfo;
+
+        public WordBreakingInformationRetriever(string databasePath, CultureInfo cultureInfo)
+        {
+            this.databasePath = databasePath;
+            this.cultureInfo = cultureInfo;
+        }
+
+        public WordBreakingInformation GetWordBreakingInformation()
+        {
+            string folder = databasePath;
+
+            // Load the global Substitutions List
+            string filename = Path.Combine(folder, string.Format("Substitutions.global.txt"));
+            LoadSubstitutions(filename);
+
+            // Load the regional Substitutions List
+            filename = Path.Combine(folder, string.Format("Substitutions.{0}.txt", cultureInfo));
+            LoadSubstitutions(filename);
+
+            // Load the global whitespace list
+            filename = Path.Combine(folder, string.Format("Whitespace.global.txt"));
+            LoadWhitespace(filename);
+
+            // Load the regional whitespace list
+            filename = Path.Combine(folder, string.Format("Whitespace.{0}.txt", cultureInfo));
+            LoadWhitespace(filename);
+
+            // Load the global noise words list
+            filename = Path.Combine(folder, string.Format("NoiseWords.global.txt"));
+            LoadNoiseWords(filename);
+
+            // Load the regional noise words list
+            filename = Path.Combine(folder, string.Format("NoiseWords.{0}.txt", cultureInfo));
+            LoadNoiseWords(filename);
+
+            return null;
+        }
+
+        private void LoadNoiseWords(string filename)
+        {
+            if (noiseWords == null)
+                noiseWords = new Dictionary<string, string>();
+
+            if (!File.Exists(filename))
+                return;
+
+            TextReader rdr = new StreamReader(File.Open(filename, FileMode.Open, FileAccess.Read, FileShare.Read), Encoding.Unicode);
+            string line;
+            while ((line = rdr.ReadLine()) != null)
+            {
+                line = line.Trim();
+                if (!noiseWords.ContainsKey(line))
+                    noiseWords.Add(line, null);
+            }
+            rdr.Close();
+        }
+
+        private void LoadWhitespace(string filename)
+        {
+            // Format: {char}\r\n
+            if (whitespace == null)
+                whitespace = new List<char>();
+
+            if (!File.Exists(filename))
+                return;
+
+            TextReader rdr = new StreamReader(File.Open(filename, FileMode.Open, FileAccess.Read, FileShare.Read), Encoding.Unicode);
+            string line;
+            while ((line = rdr.ReadLine()) != null)
+            {
+                // there should only be 1 char
+                if (line.Length != 1)
+                {
+                    Trace.WriteLine(string.Format("Invlaid Line in file '{0}'. Line: {1}", filename, line));
+                    continue; // ignore this
+                }
+                char chr = line[0];
+                if (!whitespace.Contains(chr))
+                    whitespace.Add(chr);
+            }
+            rdr.Close();
+            whitespace.Add('\r');
+            whitespace.Add('\n');
+        }
+
+        private void LoadSubstitutions(string filename)
+        {
+            // Format: À=A\r\n  OR À=\r\n
+            if (substitutions == null)
+                substitutions = new Dictionary<string, string>();
+
+            if (!File.Exists(filename))
+                return;
+
+            TextReader rdr = new StreamReader(File.Open(filename, FileMode.Open, FileAccess.Read, FileShare.Read), Encoding.Unicode);
+            string line;
+            while ((line = rdr.ReadLine()) != null)
+            {
+                string leftSide = line.Substring(0, line.IndexOf('=', 1));
+                string rightSide = line.Substring(line.IndexOf('=', 1)).Replace("=", "");
+                if (substitutions.ContainsKey(leftSide))
+                    substitutions[leftSide] = rightSide;
+                else
+                    substitutions.Add(leftSide, rightSide);
+            }
+            rdr.Close();
+        }
+    }
+
+    public class WordBreakingInformation
+    {
+        public IDictionary<string, string> Substitutions { get; set; }
+        public IList<char> Whitespace { get; set; }
+        public IDictionary<string, string> NoiseWords { get; set; }
+    }
+
     /// <summary>
 	/// Responsible for the creation of an Index.
 	/// This class will break a phrase into words.
@@ -38,110 +166,26 @@ namespace CSharpQuery.WordBreaker {
 	/// </summary>
 	public class DefaultWordBreaker : IWordBreaker
     {
-		protected Dictionary<string, string> substitutions;
-		protected List<char> whitespace;
-		protected Dictionary<string, string> noiseWords;
+        private readonly IWordBreakingInformationRetriever wordBreakingInformationRetriever;
 
-		protected bool initialized = false;
+        protected bool initialized = false;
 
 		public CultureInfo Culture { get; set; }
 		public string DatabasePath { get; set; }
 
-		public DefaultWordBreaker() {
-            this.Culture = new CultureInfo("en-US");
+		public DefaultWordBreaker(IWordBreakingInformationRetriever wordBreakingInformationRetriever)
+		{
+		    this.wordBreakingInformationRetriever = wordBreakingInformationRetriever;
+		    this.Culture = new CultureInfo("en-US");
 		}
 
-		public void Initialize() {
+        public void Initialize() {
 			initialized = true;
-			string folder = DatabasePath;
 
-			// Load the global Substitutions List
-			string filename = Path.Combine(folder, string.Format("Substitutions.global.txt"));
-			LoadSubstitutions(filename);
-
-			// Load the regional Substitutions List
-			filename = Path.Combine(folder, string.Format("Substitutions.{0}.txt", Culture));
-			LoadSubstitutions(filename);
-
-			// Load the global whitespace list
-			filename = Path.Combine(folder, string.Format("Whitespace.global.txt"));
-			LoadWhitespace(filename);
-
-			// Load the regional whitespace list
-			filename = Path.Combine(folder, string.Format("Whitespace.{0}.txt", Culture));
-			LoadWhitespace(filename);
-
-			// Load the global noise words list
-			filename = Path.Combine(folder, string.Format("NoiseWords.global.txt"));
-			LoadNoiseWords(filename);
-
-			// Load the regional noise words list
-			filename = Path.Combine(folder, string.Format("NoiseWords.{0}.txt", Culture));
-			LoadNoiseWords(filename);
 		}
 
-		private void LoadNoiseWords(string filename) {
-			if (noiseWords == null)
-				noiseWords = new Dictionary<string,string>();
+		
 
-			if (!File.Exists(filename))
-				return;
-
-			TextReader rdr = new StreamReader(File.Open(filename, FileMode.Open, FileAccess.Read, FileShare.Read), Encoding.Unicode);
-			string line;
-			while ((line = rdr.ReadLine()) != null) {
-				line = line.Trim();
-				if (!noiseWords.ContainsKey(line))
-					noiseWords.Add(line, null);
-			}
-			rdr.Close();
-		}
-
-		private void LoadWhitespace(string filename) {
-			// Format: {char}\r\n
-			if (whitespace == null)
-				whitespace = new List<char>();
-
-			if (!File.Exists(filename))
-				return;
-
-			TextReader rdr = new StreamReader(File.Open(filename, FileMode.Open, FileAccess.Read, FileShare.Read), Encoding.Unicode);
-			string line;
-			while ((line = rdr.ReadLine()) != null) {
-				// there should only be 1 char
-				if (line.Length != 1) {
-					Trace.WriteLine(string.Format("Invlaid Line in file '{0}'. Line: {1}", filename, line));
-					continue; // ignore this
-				}
-				char chr = line[0];
-				if ( !whitespace.Contains(chr) )
-					whitespace.Add(chr);
-			}
-			rdr.Close();
-			whitespace.Add('\r');
-			whitespace.Add('\n');
-		}
-
-		private void LoadSubstitutions(string filename) {
-			// Format: À=A\r\n  OR À=\r\n
-			if (substitutions == null)
-				substitutions = new Dictionary<string,string>();
-			
-			if (!File.Exists(filename))
-				return;
-
-			TextReader rdr = new StreamReader(File.Open(filename, FileMode.Open, FileAccess.Read, FileShare.Read), Encoding.Unicode);
-			string line;
-			while ((line = rdr.ReadLine()) != null) {
-				string leftSide = line.Substring(0, line.IndexOf('=', 1));
-				string rightSide = line.Substring(line.IndexOf('=', 1)).Replace("=", "");
-				if (substitutions.ContainsKey(leftSide))
-					substitutions[leftSide] = rightSide;
-				else
-					substitutions.Add(leftSide, rightSide);
-			}
-			rdr.Close();
-		}
 
 		/// <summary>
 		/// Breaks up words. See Class Notes
@@ -155,16 +199,19 @@ namespace CSharpQuery.WordBreaker {
 			if (!initialized)
 				Initialize();
 
+
+		    var info = wordBreakingInformationRetriever.GetWordBreakingInformation();
+
 			// Do a bit of pre-processing
 			string lowerPhrase = phrase.ToLower(Culture);
 			// Do replacements on multi-char substitutions
-			substitutions.Keys.ToList().ForEach(n => lowerPhrase = lowerPhrase.Replace(n, substitutions[n]));
+            info.Substitutions.Keys.ToList().ForEach(n => lowerPhrase = lowerPhrase.Replace(n, info.Substitutions[n]));
 
-			List<Word> results = new List<Word>();
-			List<string> words = lowerPhrase.Split(whitespace.ToArray(), StringSplitOptions.RemoveEmptyEntries).ToList();
+			var results = new List<Word>();
+            var words = lowerPhrase.Split(info.Whitespace.ToArray(), StringSplitOptions.RemoveEmptyEntries).ToList();
 			words.ForEach(n => n = n.Trim().ToLower(Culture));
 
-			results.AddRange(from n in words where !noiseWords.ContainsKey(n) select new Word(n.Trim(), 0));
+			results.AddRange(from n in words where !info.NoiseWords.ContainsKey(n) select new Word(n.Trim(), 0));
 
 			// Remove the empties
 			results.RemoveAll(n => string.IsNullOrEmpty(n.WordText));
@@ -181,8 +228,9 @@ namespace CSharpQuery.WordBreaker {
 
 		private Word CreateWord(string word, int pos) {
 			// check to see if she is a noise word
-			word = word.Trim().Trim(whitespace.ToArray()).ToLower(Culture);
-			if ( noiseWords.ContainsKey(word) )
+		    var wordBreakingInformation = wordBreakingInformationRetriever.GetWordBreakingInformation();
+		    word = word.Trim().Trim(wordBreakingInformation.Whitespace.ToArray()).ToLower(Culture);
+			if ( wordBreakingInformation.NoiseWords.ContainsKey(word) )
 				return null;
 			if (string.IsNullOrEmpty(word))
 				return null;			 

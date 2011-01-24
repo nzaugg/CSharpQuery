@@ -59,7 +59,7 @@ namespace CSharpQuery.QueryEngine {
             var index = textIndexReader.GetTextIndex();
 
 		    // Get all of the words (front match)
-            List<Word> queryWordsList = (new WordBreaker.DefaultWordBreaker() { DatabasePath = textFileAccessContext.Directory }).BreakWords(query);
+            List<Word> queryWordsList = (new WordBreaker.DefaultWordBreaker(new WordBreakingInformationRetriever(textFileAccessContext.Directory, textFileAccessContext.Culture)) { DatabasePath = textFileAccessContext.Directory }).BreakWords(query);
 
 			Dictionary<Synonym, List<WordRef>> results = new Dictionary<Synonym, List<WordRef>>();
             List<Synonym> words = (new DefaultThesaurus(textFileAccessContext.Culture) { DatabasePath = textFileAccessContext.Directory }).Suggest(queryWordsList);
@@ -73,7 +73,7 @@ namespace CSharpQuery.QueryEngine {
 					if (syn == word.OriginalWord)
 						continue;
 
-                    List<Word> synBreaker = (new WordBreaker.DefaultWordBreaker() { DatabasePath = textFileAccessContext.Directory }).BreakWords(syn);
+                    List<Word> synBreaker = (new WordBreaker.DefaultWordBreaker(new WordBreakingInformationRetriever(textFileAccessContext.Directory,textFileAccessContext.Culture)) { DatabasePath = textFileAccessContext.Directory }).BreakWords(syn);
 					List<WordRef> SubResults = new List<WordRef>();
 					bool FirstLoop = true;
 
@@ -123,7 +123,7 @@ namespace CSharpQuery.QueryEngine {
 		    TextIndex index = textIndexReader.GetTextIndex();
 
 			// Get all of the words (front match)
-            List<Word> queryWordsList = (new WordBreaker.DefaultWordBreaker() { DatabasePath = textFileAccessContext.Directory }).BreakWords(query);
+            List<Word> queryWordsList = (new WordBreaker.DefaultWordBreaker(new WordBreakingInformationRetriever(textFileAccessContext.Directory, textFileAccessContext.Culture)) { DatabasePath = textFileAccessContext.Directory }).BreakWords(query);
 			List<Synonym> wordList = queryWordsList.Select(n => new Synonym() { OriginalWord = n.WordText }).ToList();
 
 			Dictionary<Synonym, List<WordRef>> results = new Dictionary<Synonym, List<WordRef>>();
