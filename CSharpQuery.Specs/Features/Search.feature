@@ -8,7 +8,7 @@ Scenario: Search for an item
 	| Key | FirstName | LastName |
 	| 4   | Darren    | Cauthon  |
 	When I index the people 
-	And I search for 'Darren Cauthon'
+	And I search for 'Darren'
 	Then my search results should include
 	| Key |
 	| 4   |

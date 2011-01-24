@@ -19,6 +19,7 @@ using System.Threading;
 using System.Configuration;
 using System.IO;
 using System.Data.SqlServerCe;
+using CSharpQuery.Thesaurus;
 using CSharpQuery.WordBreaker;
 
 namespace TestApp {
@@ -65,7 +66,10 @@ namespace TestApp {
 			Stopwatch sw = Stopwatch.StartNew();
 
             //var freeTextQuery = new FreeTextQuery("Bible", path, new CultureInfo("en-US"));
-		    var freeTextQuery = new FreeTextQuery(new TextFileAccessContext("Bible", path, new CultureInfo("en-US")));
+		    //var freeTextQuery = new FreeTextQuery(new TextFileAccessContext("Bible", path, new CultureInfo("en-US")));
+
+		    var context = new TextFileAccessContext("Bible", path, new CultureInfo("en-US"));
+		    var freeTextQuery = new FreeTextQuery(new TextIndexReader(context), new DefaultWordBreaker(new WordBreakingInformationRetriever(context.Directory, context.Culture)), new DefaultThesaurus(context.Directory));
 
 			List<QueryResult> result = freeTextQuery.SearchFreeTextQuery(txtCriteria.Text);
 			sw.Stop();

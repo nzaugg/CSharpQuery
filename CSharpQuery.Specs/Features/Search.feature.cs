@@ -74,7 +74,7 @@ this.ScenarioSetup(scenarioInfo);
 #line 10
  testRunner.When("I index the people");
 #line 11
- testRunner.And("I search for \'Darren Cauthon\'");
+ testRunner.And("I search for \'Darren\'");
 #line hidden
             TechTalk.SpecFlow.Table table2 = new TechTalk.SpecFlow.Table(new string[] {
                         "Key"});

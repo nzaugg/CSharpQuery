@@ -143,6 +143,10 @@
       <Project>{22FFE007-B2D7-4CD5-BB04-F1BA0689500D}</Project>
       <Name>CSharpQuery.QueryEngine</Name>
     </ProjectReference>
+    <ProjectReference Include="..\CSharpQuery.Thesaurus\CSharpQuery.Thesaurus.csproj">
+      <Project>{5CF0D0FF-596C-4F55-9F9F-0A58209E8EBE}</Project>
+      <Name>CSharpQuery.Thesaurus</Name>
+    </ProjectReference>
     <ProjectReference Include="..\CSharpQuery.WordBreaker\CSharpQuery.WordBreaker.csproj">
       <Project>{6D85265C-9393-4305-AA78-D08E1970078A}</Project>
       <Name>CSharpQuery.WordBreaker</Name>

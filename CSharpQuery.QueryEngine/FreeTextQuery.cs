@@ -18,7 +18,7 @@ namespace CSharpQuery.QueryEngine {
 	public class FreeTextQuery {
 	    private readonly IWordBreaker wordBreaker;
 	    private readonly IThesaurus thesaurus;
-	    private readonly TextIndexReader textIndexReader;
+        private readonly ITextIndexReader textIndexReader;
 	    private TextIndexSearcher textIndexSearcher;
 
 	    #region Fields - Query Tuning
@@ -33,13 +33,13 @@ namespace CSharpQuery.QueryEngine {
 		public static ReaderWriterLock readerLock = new ReaderWriterLock();
 		#endregion
 
-        public FreeTextQuery(TextFileAccessContext textFileAccessContext,
+        public FreeTextQuery(ITextIndexReader textIndexReader,
             IWordBreaker wordBreaker,
             IThesaurus thesaurus)
 	    {
             this.wordBreaker = wordBreaker;
             this.thesaurus = thesaurus;
-            textIndexReader = new TextIndexReader(textFileAccessContext);
+            this.textIndexReader = textIndexReader;
             Indexes = new SortedList<string, TextIndex>();
             textIndexSearcher = new TextIndexSearcher();
 	    }
@@ -123,7 +123,6 @@ namespace CSharpQuery.QueryEngine {
 
 	    public List<QueryResult> SearchTextQuery(string catalog, CultureInfo culture, string query) {
 			readerLock.AcquireReaderLock(1000 * 60); // 60 second timeout
-		    var textIndexReader = new TextIndexReader(textFileAccessContext);
 		    TextIndex index = textIndexReader.GetTextIndex();
 
 			// Get all of the words (front match)
@@ -319,7 +318,12 @@ namespace CSharpQuery.QueryEngine {
 		#endregion
 	}
 
-    public class TextIndexReader
+    public interface ITextIndexReader
+    {
+        TextIndex GetTextIndex();
+    }
+
+    public class TextIndexReader : ITextIndexReader
     {
         private readonly TextFileAccessContext textFileAccessContext;
 
