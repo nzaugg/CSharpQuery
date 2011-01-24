@@ -23,6 +23,6 @@ namespace CSharpQuery.QueryEngine {
 		public decimal lowPhraseIndex  { get; set; }
 		public decimal multipleOccurance { get; set; }
 
-		public List<WordRef> WordIndexes { get; set; }
+		public List<WordReference> WordIndexes { get; set; }
 	}
 }

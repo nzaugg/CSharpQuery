@@ -44,7 +44,7 @@ namespace CSharpQuery.QueryEngine
             return textIndex;
         }
 
-        private List<WordRef> ExtractWordReferences(string record)
+        private List<WordReference> ExtractWordReferences(string record)
         {
             // saxphone5941389259415012559415492594168125
             // ^BR      ^BF    ^FS^EF                                 ^ER
@@ -56,7 +56,7 @@ namespace CSharpQuery.QueryEngine
             var fieldStartIdx = record.IndexOf(textIndexFileInformation.BeginField);
             var fieldEndIdx = record.IndexOf(textIndexFileInformation.EndField);
 
-            var results = new List<WordRef>();
+            var results = new List<WordReference>();
             while (fieldStartIdx > 0 && fieldEndIdx > 0)
             {
                 // 56166096
@@ -64,7 +64,7 @@ namespace CSharpQuery.QueryEngine
                 var rsIdx = Field.IndexOf(textIndexFileInformation.FieldInfoDelimeter);
                 var key = int.Parse(Field.Substring(1, rsIdx - 1));
                 var pos = int.Parse(Field.Substring(rsIdx + 1));
-                results.Add(new WordRef {Word = word, Key = key, PhraseIndex = pos});
+                results.Add(new WordReference {Word = word, Key = key, PhraseIndex = pos});
 
                 fieldStartIdx = record.IndexOf(textIndexFileInformation.BeginField, fieldEndIdx);
                 fieldEndIdx = record.IndexOf(textIndexFileInformation.EndField,

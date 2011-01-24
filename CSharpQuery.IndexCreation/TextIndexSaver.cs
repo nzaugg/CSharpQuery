@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
+﻿using System.IO;
 using System.Text;
 using CSharpQuery.Index;
 
@@ -13,8 +11,8 @@ namespace CSharpQuery.IndexCreation
 
     public class TextIndexSaver : ITextIndexSaver
     {
-        private TextIndexFileInformation textIndexFileInformation;
-        private IIndexFileNameGenerator indexFileNameGenerator;
+        private readonly TextIndexFileInformation textIndexFileInformation;
+        private readonly IIndexFileNameGenerator indexFileNameGenerator;
 
         public TextIndexSaver(TextFileAccessContext textFileAccessContext)
         {
@@ -24,29 +22,29 @@ namespace CSharpQuery.IndexCreation
 
         public void SaveIndex(TextIndex textIndex)
         {
-            string fileName = indexFileNameGenerator.GetIndexFileName();
+            var fileName = indexFileNameGenerator.GetIndexFileName();
 
             if (File.Exists(fileName))
                 File.Delete(fileName);
 
-            StreamWriter writer = new StreamWriter(
+            var writer = new StreamWriter(
                 File.Open(fileName, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None), Encoding.Unicode);
 
             writer.Write(textIndexFileInformation.BeginFile);
 
-            foreach (string key in textIndex.Keys)
+            foreach (var key in textIndex.Keys)
             {
                 writer.Write(textIndexFileInformation.BeginRecord);
                 writer.Write(key);
-                List<WordRef> wordRecords = textIndex[key];
-                wordRecords.Sort((Comparison<WordRef>)delegate(WordRef x, WordRef y)
-                                                          {
-                                                              if (x.Key == y.Key)
-                                                                  return x.PhraseIndex - y.PhraseIndex;
-                                                              else
-                                                                  return x.Key - y.Key;
-                                                          });
-                foreach (WordRef wref in wordRecords)
+                var wordRecords = textIndex[key];
+                wordRecords.Sort(delegate(WordReference x, WordReference y)
+                                     {
+                                         if (x.Key == y.Key)
+                                             return x.PhraseIndex - y.PhraseIndex;
+                                         else
+                                             return x.Key - y.Key;
+                                     });
+                foreach (var wref in wordRecords)
                 {
                     writer.Write(textIndexFileInformation.BeginField);
                     writer.Write(wref.Key);

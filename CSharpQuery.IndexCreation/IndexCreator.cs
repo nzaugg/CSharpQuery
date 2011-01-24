@@ -10,17 +10,11 @@ using CSharpQuery.Index;
 
 namespace CSharpQuery.IndexCreation
 {
-    public interface IIndexCreator
-    {
-        TextIndex CreateIndex(IEnumerable<Phrase> phrases);
-    }
-
     public class IndexCreator : IIndexCreator
     {
         private readonly ITextIndexFiller textIndexFiller;
 
 	    public delegate void RowInserted(int rowNum);
-
 		public event RowInserted OnRowInserted;
 
         public IndexCreator(ITextIndexFiller textIndexFiller)
@@ -28,9 +22,6 @@ namespace CSharpQuery.IndexCreation
             this.textIndexFiller = textIndexFiller;
         }
 
-        // 1) Load Table
-		// 2) Add items to index
-		// 3) Save Index
 		public TextIndex CreateIndex(IEnumerable<Phrase> phrases) {
 			
 			var index = new TextIndex();
@@ -53,7 +44,7 @@ namespace CSharpQuery.IndexCreation
 
         private void AddPhrase(TextIndex index, Phrase phrase)
 	    {
-	        textIndexFiller.AddPhraseToIndex(index, phrase.Key, phrase.Text);
+	        textIndexFiller.AddPhraseToIndex(index, phrase);
 	    }
 
 	    private void FireRowInsertedEvent(int row)

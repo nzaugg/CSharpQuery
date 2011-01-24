@@ -19,7 +19,7 @@ namespace CSharpQuery.QueryEngine {
             this.searchMethod = searchMethod;
         }
 
-	    public List<string> Search(SortedList<string, List<WordRef>> value, string searchPhrase) {
+	    public List<string> Search(SortedList<string, List<WordReference>> value, string searchPhrase) {
 
 			List<string> results = new List<string>();
 
@@ -44,7 +44,7 @@ namespace CSharpQuery.QueryEngine {
 			return results;
 		}
 
-		private static int SearchRecursive(int start, int end, SortedList<string, List<WordRef>> value, string searchPhrase, SearchPredicateComparer searchMethod) {
+		private static int SearchRecursive(int start, int end, SortedList<string, List<WordReference>> value, string searchPhrase, SearchPredicateComparer searchMethod) {
 			if (start == end || start > end || end-start==1)
 				return start;
 

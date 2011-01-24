@@ -2,7 +2,7 @@
 
 namespace CSharpQuery.Index
 {
-    public class TextIndex : SortedList<string, List<WordRef>>
+    public class TextIndex : SortedList<string, List<WordReference>>
     {
     }
 }

@@ -2,7 +2,7 @@
 
 namespace CSharpQuery.Index
 {
-    public class WordRef
+    public class WordReference
     {
         public string Word { get; set; }
         public int Key { get; set; }
@@ -12,8 +12,8 @@ namespace CSharpQuery.Index
         {
             if (obj == null)
                 return false;
-            if (obj is WordRef)
-                return ((WordRef) obj).Key == Key;
+            if (obj is WordReference)
+                return ((WordReference) obj).Key == Key;
             return false;
         }
 
@@ -28,14 +28,14 @@ namespace CSharpQuery.Index
         }
     }
 
-    public class WordRefEqualityComparer : IEqualityComparer<WordRef>
+    public class WordRefEqualityComparer : IEqualityComparer<WordReference>
     {
-        public bool Equals(WordRef x, WordRef y)
+        public bool Equals(WordReference x, WordReference y)
         {
             return x.Equals(y);
         }
 
-        public int GetHashCode(WordRef obj)
+        public int GetHashCode(WordReference obj)
         {
             return obj.Key;
         }

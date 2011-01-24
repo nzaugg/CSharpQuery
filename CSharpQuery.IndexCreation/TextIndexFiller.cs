@@ -4,11 +4,6 @@ using CSharpQuery.WordBreaker;
 
 namespace CSharpQuery.IndexCreation
 {
-    public interface ITextIndexFiller
-    {
-        void AddPhraseToIndex(TextIndex index, int key, string phrase);
-    }
-
     public class TextIndexFiller : ITextIndexFiller
     {
         private readonly IWordBreaker wordBreaker;
@@ -18,25 +13,45 @@ namespace CSharpQuery.IndexCreation
             this.wordBreaker = wordBreaker;
         }
 
-        public void AddPhraseToIndex(TextIndex index, int key, string phrase)
+        public void AddPhraseToIndex(TextIndex index, Phrase phrase)
         {
-            var words = wordBreaker.BreakWords(phrase);
+            var words = GetTheWordsToIndex(phrase);
 
-            if (words == null)
-                return;
+            AddTheWordsToTheIndex(words, phrase.Key, index);
+        }
 
-            // add the words to the index
-            foreach (var wrd in words)
+        private IEnumerable<Word> GetTheWordsToIndex(Phrase phrase)
+        {
+            return wordBreaker.BreakWords(phrase.Text);
+        }
+
+        private static void AddTheWordsToTheIndex(IEnumerable<Word> words, int key, TextIndex index)
+        {
+            foreach (var word in words)
             {
-                var reference = new WordRef {Word = wrd.WordText, Key = key, PhraseIndex = wrd.Index};
-                if (!index.ContainsKey(wrd.WordText))
-                    index.Add(wrd.WordText, new List<WordRef>(new[] {reference}));
+                var wordReference = new WordReference {Word = word.WordText, Key = key, PhraseIndex = word.Index};
+
+                if (ThisWordIsNotInTheIndex(word, index))
+                    AddTheNewWordToTheIndex(word, index, wordReference);
                 else
-                {
-                    var wordRefs = index[wrd.WordText];
-                    wordRefs.Add(reference);
-                }
+                    AddTheNewUseOfThisWordToTheIndex(word, index, wordReference);
             }
+        }
+
+        private static void AddTheNewUseOfThisWordToTheIndex(Word word, TextIndex index, WordReference wordReference)
+        {
+            index[word.WordText].Add(wordReference);
+        }
+
+        private static void AddTheNewWordToTheIndex(Word word, TextIndex index, WordReference wordReference)
+        {
+            var wordReferences = new List<WordReference>(new[] {wordReference});
+            index.Add(word.WordText, wordReferences);
+        }
+
+        private static bool ThisWordIsNotInTheIndex(Word word, TextIndex index)
+        {
+            return !index.ContainsKey(word.WordText);
         }
     }
 }

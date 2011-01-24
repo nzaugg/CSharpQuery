@@ -68,7 +68,7 @@
     <Compile Include="TextIndex.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TextIndexFileInformation.cs" />
-    <Compile Include="WordRef.cs" />
+    <Compile Include="WordReference.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Key.snk" />

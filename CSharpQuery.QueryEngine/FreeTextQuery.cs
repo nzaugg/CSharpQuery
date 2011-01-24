@@ -61,12 +61,12 @@ namespace CSharpQuery.QueryEngine {
 		    // Get all of the words (front match)
 		    List<Word> queryWordsList = wordBreaker.BreakWords(query);
 
-			Dictionary<Synonym, List<WordRef>> results = new Dictionary<Synonym, List<WordRef>>();
+			Dictionary<Synonym, List<WordReference>> results = new Dictionary<Synonym, List<WordReference>>();
             List<Synonym> words = thesaurus.Suggest(queryWordsList);
 			WordRefEqualityComparer comp = new WordRefEqualityComparer();
 
 			foreach (Synonym word in words) {
-				List<WordRef> res = textIndexSearcher.FrontMatch(textIndex, word.OriginalWord);
+				List<WordReference> res = textIndexSearcher.FrontMatch(textIndex, word.OriginalWord);
 
 				// Synonyms
 				foreach (string syn in word.SuggestedWords) {
@@ -74,12 +74,12 @@ namespace CSharpQuery.QueryEngine {
 						continue;
 
                     List<Word> synBreaker = wordBreaker.BreakWords(syn);
-					List<WordRef> SubResults = new List<WordRef>();
+					List<WordReference> SubResults = new List<WordReference>();
 					bool FirstLoop = true;
 
 					foreach (Word w in synBreaker) {
 						// maybe intersect the results here?
-						List<WordRef> lookup = textIndexSearcher.FindWord(textIndex, w.WordText);
+						List<WordReference> lookup = textIndexSearcher.FindWord(textIndex, w.WordText);
 						if (lookup != null) {
 							if (FirstLoop) {
 								SubResults.AddRange(lookup);
@@ -101,7 +101,7 @@ namespace CSharpQuery.QueryEngine {
 			// intersect the results
 			List<int> resultList = new List<int>();
 			bool firstTime = true;
-			foreach (List<WordRef> wrfs in results.Values) {
+			foreach (List<WordReference> wrfs in results.Values) {
 				if (firstTime) {
 					resultList = wrfs.Select(n => n.Key).ToList();
 					firstTime = false;
@@ -124,9 +124,9 @@ namespace CSharpQuery.QueryEngine {
             List<Word> queryWordsList = wordBreaker.BreakWords(query);
 			List<Synonym> wordList = queryWordsList.Select(n => new Synonym() { OriginalWord = n.WordText }).ToList();
 
-			Dictionary<Synonym, List<WordRef>> results = new Dictionary<Synonym, List<WordRef>>();
+			Dictionary<Synonym, List<WordReference>> results = new Dictionary<Synonym, List<WordReference>>();
 			foreach (Synonym word in wordList) {
-				List<WordRef> res = textIndexSearcher.FindWord(textIndex, word.OriginalWord);
+				List<WordReference> res = textIndexSearcher.FindWord(textIndex, word.OriginalWord);
 				results.Add(word, res);
 			}
 			readerLock.ReleaseReaderLock();
@@ -135,7 +135,7 @@ namespace CSharpQuery.QueryEngine {
 			List<int> resultList = new List<int>();
 			WordRefEqualityComparer comp = new WordRefEqualityComparer();
 			bool firstTime = true;
-			foreach (List<WordRef> wrfs in results.Values) {
+			foreach (List<WordReference> wrfs in results.Values) {
 				if (firstTime) {
 					resultList = wrfs.Select(n => n.Key).ToList();
 					firstTime = false;
@@ -156,21 +156,21 @@ namespace CSharpQuery.QueryEngine {
 		/// <param name="results">The word lookup results</param>
 		/// <param name="resultList">The intersection of the results lists</param>
 		/// <returns>A SortedList(int, QueryResult) int: They [Key] value in the query; QueryResult: The matching words for that key</returns>
-		private static SortedList<int, QueryResult> PivitQuery(Dictionary<Synonym, List<WordRef>> results, List<int> resultList) {
+		private static SortedList<int, QueryResult> PivitQuery(Dictionary<Synonym, List<WordReference>> results, List<int> resultList) {
 			// WordRef - Synonyms?
 			SortedList<int, QueryResult> queryResults = new SortedList<int, QueryResult>();
-			List<WordRef> sr = new List<WordRef>();
+			List<WordReference> sr = new List<WordReference>();
 			foreach (Synonym wrd in results.Keys) {
 				sr.AddRange(
 					results[wrd].Where(n => resultList.Contains(n.Key))
 				);
 			}
 
-			foreach (WordRef wr in sr) {
+			foreach (WordReference wr in sr) {
 				if (queryResults.ContainsKey(wr.Key))
 					queryResults[wr.Key].WordIndexes.Add(wr);
 				else {
-					QueryResult q = new QueryResult() { Key = wr.Key, WordIndexes = new List<WordRef>() };
+					QueryResult q = new QueryResult() { Key = wr.Key, WordIndexes = new List<WordReference>() };
 					q.WordIndexes.Add(wr);
 					queryResults.Add(wr.Key, q);
 				}
@@ -234,7 +234,7 @@ namespace CSharpQuery.QueryEngine {
 		private static decimal RankLowPhraseIndex(string query, List<Synonym> words, QueryResult queryResult) {
 			// The sum of the pos
 			decimal posVal = 0;
-			foreach (WordRef wr in queryResult.WordIndexes) {
+			foreach (WordReference wr in queryResult.WordIndexes) {
 				int val = (wr.PhraseIndex - wr.Word.Length);
 				if (val > 0)
 					posVal += val;
@@ -259,7 +259,7 @@ namespace CSharpQuery.QueryEngine {
 			bool containsAllWords = true;
 			int lastIndex = -1;
 			foreach (Synonym word in words) {
-				WordRef wrdIndx = queryResult.WordIndexes.Where(n => n.Word == word.OriginalWord).FirstOrDefault();
+				WordReference wrdIndx = queryResult.WordIndexes.Where(n => n.Word == word.OriginalWord).FirstOrDefault();
 				if (wrdIndx != null) {
 					if (lastIndex < wrdIndx.PhraseIndex)
 						lastIndex = wrdIndx.PhraseIndex;
@@ -292,12 +292,12 @@ namespace CSharpQuery.QueryEngine {
 			// Not counting the thesaurus looked up words, 
 			// How close together are the search terms? Are they right next to each other?
 
-			List<WordRef> wr = (from q in queryResult.WordIndexes orderby q.PhraseIndex select q).ToList();
+			List<WordReference> wr = (from q in queryResult.WordIndexes orderby q.PhraseIndex select q).ToList();
 
 			int distance = 0;
 			for (int i = 0; i < wr.Count-1; i++) {
-				WordRef w1 = wr[i];
-				WordRef w2 = wr[i + 1];
+				WordReference w1 = wr[i];
+				WordReference w2 = wr[i + 1];
 
 				// Distance between these two?
 				int d = ((w1.PhraseIndex - w1.Word.Length) + (w2.PhraseIndex - w2.Word.Length));
