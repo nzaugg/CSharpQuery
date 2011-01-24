@@ -15,28 +15,33 @@ using System.Xml.Linq;
 using CSharpQuery.WordBreaker;
 
 namespace CSharpQuery.Thesaurus {
-	public class DefaultThesaurus {
-		protected SortedList<string, SortedList<string, int>> thesaurusDictionary;
+    public interface IThesaurus
+    {
+        List<Synonym> Suggest(List<Word> searchWords);
+    }
 
-		protected bool initialized = false;
+    public class DefaultThesaurus : IThesaurus
+    {
+        private readonly string databasePath;
+        protected SortedList<string, SortedList<string, int>> thesaurusDictionary;
 
-		public CultureInfo Culture { get; set; }
-		public string DatabasePath { get; set; }
+		protected bool initialized;
 
-		public DefaultThesaurus(CultureInfo culture) {
-			this.thesaurusDictionary = new SortedList<string, SortedList<string, int>>();
-			this.Culture = culture;
+		public DefaultThesaurus(string databasePath)
+		{
+		    this.databasePath = databasePath;
+		    thesaurusDictionary = new SortedList<string, SortedList<string, int>>();
 		}
 
-		public void Initialize() {
+        public void Initialize() {
 			initialized = true;
 
 			// Thesaurus.global.xml
-			string filename = Path.Combine(DatabasePath, "Thesaurus.global.xml");
+            string filename = Path.Combine(databasePath, "Thesaurus.global.xml");
 			LoadThesaurus(filename);
 
 			// Thesaurus.en-US.xml
-			filename = Path.Combine(DatabasePath, "Thesaurus.global.xml");
+            filename = Path.Combine(databasePath, "Thesaurus.global.xml");
 			LoadThesaurus(filename);
 		}
 

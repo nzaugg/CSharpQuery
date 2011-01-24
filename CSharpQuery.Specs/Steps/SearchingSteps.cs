@@ -1,4 +1,5 @@
 ﻿using CSharpQuery.Index;
+using CSharpQuery.QueryEngine;
 using TechTalk.SpecFlow;
 
 namespace CSharpQuery.Specs.Steps
@@ -11,7 +12,7 @@ namespace CSharpQuery.Specs.Steps
         {
             var index = ScenarioContext.Current.Get<TextIndex>();
 
-            ScenarioContext.Current.Pending();
+            var query = new FreeTextQuery(null);
         }
     }
 }

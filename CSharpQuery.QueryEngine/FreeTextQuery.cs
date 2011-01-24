@@ -16,7 +16,8 @@ using CSharpQuery.Thesaurus;
 
 namespace CSharpQuery.QueryEngine {
 	public class FreeTextQuery {
-	    private readonly TextFileAccessContext textFileAccessContext;
+	    private readonly IWordBreaker wordBreaker;
+	    private readonly IThesaurus thesaurus;
 	    private readonly TextIndexReader textIndexReader;
 	    private TextIndexSearcher textIndexSearcher;
 
@@ -32,9 +33,12 @@ namespace CSharpQuery.QueryEngine {
 		public static ReaderWriterLock readerLock = new ReaderWriterLock();
 		#endregion
 
-        public FreeTextQuery(TextFileAccessContext textFileAccessContext)
+        public FreeTextQuery(TextFileAccessContext textFileAccessContext,
+            IWordBreaker wordBreaker,
+            IThesaurus thesaurus)
 	    {
-            this.textFileAccessContext = textFileAccessContext;
+            this.wordBreaker = wordBreaker;
+            this.thesaurus = thesaurus;
             textIndexReader = new TextIndexReader(textFileAccessContext);
             Indexes = new SortedList<string, TextIndex>();
             textIndexSearcher = new TextIndexSearcher();
@@ -59,10 +63,10 @@ namespace CSharpQuery.QueryEngine {
             var index = textIndexReader.GetTextIndex();
 
 		    // Get all of the words (front match)
-            List<Word> queryWordsList = (new WordBreaker.DefaultWordBreaker(new WordBreakingInformationRetriever(textFileAccessContext.Directory, textFileAccessContext.Culture)) { DatabasePath = textFileAccessContext.Directory }).BreakWords(query);
+		    List<Word> queryWordsList = wordBreaker.BreakWords(query);
 
 			Dictionary<Synonym, List<WordRef>> results = new Dictionary<Synonym, List<WordRef>>();
-            List<Synonym> words = (new DefaultThesaurus(textFileAccessContext.Culture) { DatabasePath = textFileAccessContext.Directory }).Suggest(queryWordsList);
+            List<Synonym> words = thesaurus.Suggest(queryWordsList);
 			WordRefEqualityComparer comp = new WordRefEqualityComparer();
 
 			foreach (Synonym word in words) {
@@ -73,7 +77,7 @@ namespace CSharpQuery.QueryEngine {
 					if (syn == word.OriginalWord)
 						continue;
 
-                    List<Word> synBreaker = (new WordBreaker.DefaultWordBreaker(new WordBreakingInformationRetriever(textFileAccessContext.Directory,textFileAccessContext.Culture)) { DatabasePath = textFileAccessContext.Directory }).BreakWords(syn);
+                    List<Word> synBreaker = wordBreaker.BreakWords(syn);
 					List<WordRef> SubResults = new List<WordRef>();
 					bool FirstLoop = true;
 
@@ -123,7 +127,7 @@ namespace CSharpQuery.QueryEngine {
 		    TextIndex index = textIndexReader.GetTextIndex();
 
 			// Get all of the words (front match)
-            List<Word> queryWordsList = (new WordBreaker.DefaultWordBreaker(new WordBreakingInformationRetriever(textFileAccessContext.Directory, textFileAccessContext.Culture)) { DatabasePath = textFileAccessContext.Directory }).BreakWords(query);
+            List<Word> queryWordsList = wordBreaker.BreakWords(query);
 			List<Synonym> wordList = queryWordsList.Select(n => new Synonym() { OriginalWord = n.WordText }).ToList();
 
 			Dictionary<Synonym, List<WordRef>> results = new Dictionary<Synonym, List<WordRef>>();
