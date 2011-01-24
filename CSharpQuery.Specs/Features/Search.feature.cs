@@ -54,10 +54,15 @@ namespace CSharpQuery.Specs.Features
         }
         
         [NUnit.Framework.TestAttribute()]
-        [NUnit.Framework.DescriptionAttribute("Search for an item")]
-        public virtual void SearchForAnItem()
+        [NUnit.Framework.DescriptionAttribute("Good search")]
+        [NUnit.Framework.TestCaseAttribute("darren")]
+        [NUnit.Framework.TestCaseAttribute("DARREN")]
+        [NUnit.Framework.TestCaseAttribute("Darren")]
+        [NUnit.Framework.TestCaseAttribute("Cauthon")]
+        [NUnit.Framework.TestCaseAttribute("Darren Cauthon")]
+        public virtual void GoodSearch(string searchTerm)
         {
-            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Search for an item", ((string[])(null)));
+            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Good search", ((string[])(null)));
 #line 6
 this.ScenarioSetup(scenarioInfo);
 #line hidden
@@ -74,7 +79,7 @@ this.ScenarioSetup(scenarioInfo);
 #line 10
  testRunner.When("I index the people");
 #line 11
- testRunner.And("I search for \'Darren\'");
+ testRunner.And(string.Format("I search for \'{0}\'", searchTerm));
 #line hidden
             TechTalk.SpecFlow.Table table2 = new TechTalk.SpecFlow.Table(new string[] {
                         "Key"});
@@ -82,6 +87,37 @@ this.ScenarioSetup(scenarioInfo);
                         "4"});
 #line 12
  testRunner.Then("my search results should include", ((string)(null)), table2);
+#line hidden
+            testRunner.CollectScenarioErrors();
+        }
+        
+        [NUnit.Framework.TestAttribute()]
+        [NUnit.Framework.DescriptionAttribute("Bad search")]
+        [NUnit.Framework.TestCaseAttribute("1234")]
+        [NUnit.Framework.TestCaseAttribute("lskdflksjf")]
+        [NUnit.Framework.TestCaseAttribute("Evan")]
+        public virtual void BadSearch(string x)
+        {
+            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Bad search", ((string[])(null)));
+#line 24
+this.ScenarioSetup(scenarioInfo);
+#line hidden
+            TechTalk.SpecFlow.Table table3 = new TechTalk.SpecFlow.Table(new string[] {
+                        "Key",
+                        "FirstName",
+                        "LastName"});
+            table3.AddRow(new string[] {
+                        "4",
+                        "Darren",
+                        "Cauthon"});
+#line 25
+ testRunner.Given("I have the following people", ((string)(null)), table3);
+#line 28
+ testRunner.When("I index the people");
+#line 29
+ testRunner.And("I search for \'<search term>\'");
+#line 30
+ testRunner.Then("I should get no search results");
 #line hidden
             testRunner.CollectScenarioErrors();
         }

@@ -5,6 +5,7 @@ using CSharpQuery.QueryEngine;
 using CSharpQuery.Thesaurus;
 using CSharpQuery.WordBreaker;
 using Moq;
+using Should;
 using TechTalk.SpecFlow;
 using TechTalk.SpecFlow.Assist;
 
@@ -48,6 +49,14 @@ namespace CSharpQuery.Specs.Steps
             var results = ScenarioContext.Current.Get<IEnumerable<QueryResult>>();
 
             table.CompareToSet(results);
+        }
+
+        [Then(@"I should get no search results")]
+        public void ThenIShouldGetNoSearchResults()
+        {
+            var results = ScenarioContext.Current.Get<IEnumerable<QueryResult>>();
+
+            results.Count().ShouldEqual(0);
         }
     }
 }
