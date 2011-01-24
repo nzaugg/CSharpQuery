@@ -25,7 +25,7 @@ namespace CSharpQuery.Thesaurus
             filename = Path.Combine(databasePath, "Thesaurus.global.xml");
             LoadThesaurus(filename);
 
-            return thesaurusDictionary;
+            return thesaurusDictionary ?? new SortedList<string, SortedList<string, int>>();
         }
 
         private void LoadThesaurus(string filename)

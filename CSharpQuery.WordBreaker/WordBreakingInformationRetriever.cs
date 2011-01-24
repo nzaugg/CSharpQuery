@@ -48,7 +48,12 @@ namespace CSharpQuery.WordBreaker
             filename = Path.Combine(folder, string.Format("NoiseWords.{0}.txt", cultureInfo));
             LoadNoiseWords(filename);
 
-            return null;
+            return new WordBreakingInformation
+                       {
+                           NoiseWords = noiseWords,
+                           Substitutions = substitutions,
+                           Whitespace = whitespace
+                       };
         }
 
         private void LoadNoiseWords(string filename)
