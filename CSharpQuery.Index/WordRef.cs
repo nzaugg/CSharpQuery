@@ -8,13 +8,6 @@ namespace CSharpQuery.Index
         public int Key { get; set; }
         public int PhraseIndex { get; set; }
 
-        //public WordRef(string word, int key, int phraseIndex)
-        //{
-        //    Word = word;
-        //    Key = key;
-        //    PhraseIndex = phraseIndex;
-        //}
-
         public override bool Equals(object obj)
         {
             if (obj == null)
