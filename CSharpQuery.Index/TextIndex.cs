@@ -1,8 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using ProtoBuf;
+using System.Collections.Generic;
 
 namespace CSharpQuery.Index
 {
-    public class TextIndex : SortedList<string, List<WordReference>>
-    {
-    }
+	[ProtoContract]
+	public class TextIndex : SortedList<string, List<WordReference>>
+	{
+	}
 }
