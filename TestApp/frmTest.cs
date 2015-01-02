@@ -27,7 +27,10 @@ namespace TestApp {
 
 		private const string IndexDir = @"..\..\Index\";
 
+
 		TextIndex idx;
+		FreeTextQuery Query;
+		TextIndexReader IndexReader;
 
 		public frmTest() {
 			InitializeComponent();
@@ -42,7 +45,7 @@ namespace TestApp {
 		}
 
 		string _idx;
-		string indexLocation {
+		string IndexLocation {
 			get {
 				if (string.IsNullOrEmpty(_idx)) {
 					//FolderBrowserDialog dlg = new FolderBrowserDialog();
@@ -60,19 +63,15 @@ namespace TestApp {
 		List<QueryResult> previousQuery;
 		private void btnRetreiveFromIndex_Click(object sender, EventArgs e) {
 
-			string path = indexLocation;
-
 			// QUERY TEST
 			Stopwatch sw = Stopwatch.StartNew();
 
-            //var freeTextQuery = new FreeTextQuery("Bible", path, new CultureInfo("en-US"));
-		    //var freeTextQuery = new FreeTextQuery(new TextFileAccessContext("Bible", path, new CultureInfo("en-US")));
+			//var freeTextQuery = new FreeTextQuery("Bible", path, new CultureInfo("en-US"));
+			//var freeTextQuery = new FreeTextQuery(new TextFileAccessContext("Bible", path, new CultureInfo("en-US")));
+			if (Query == null)
+				Query = LoadIndex();
 
-		    var context = new TextFileAccessContext("Bible", path, new CultureInfo("en-US"));
-		    var textIndexReader = new TextIndexReader(context);
-		    var freeTextQuery = new FreeTextQuery(new DefaultWordBreaker(new WordBreakingInformationRetriever(context.Directory, context.Culture)), new DefaultThesaurus(new ThesaurusDictionaryRetriever(context.Directory)), new WordRefEqualityComparer(), new TextIndexSearcher());
-
-			List<QueryResult> result = freeTextQuery.SearchFreeTextQuery(textIndexReader.GetTextIndex(), txtCriteria.Text);
+			List<QueryResult> result = Query.SearchFreeTextQuery(IndexReader.GetTextIndex(), txtCriteria.Text);
 			sw.Stop();
 
 			previousQuery = result;
@@ -84,6 +83,13 @@ namespace TestApp {
 				lbResults.Items.Add(string.Format("{0};\t Key: {1};\t Rank: {2};\t MO: {3};\t LPI: {4};\t STP: {5};\t WM: {6}",
 					string.Join(", ", r.WordIndexes.Select(v => v.Word).ToArray()), r.Key, r.Rank, r.multipleOccurance, r.lowPhraseIndex, r.searchTermsProximity, r.wordMatching));
 			}
+		}
+
+		private FreeTextQuery LoadIndex()
+		{
+			var context = new TextFileAccessContext("Bible", IndexLocation, new CultureInfo("en-US"));
+			IndexReader = new TextIndexReader(context);
+			return new FreeTextQuery(new DefaultWordBreaker(new WordBreakingInformationRetriever(context.Directory, context.Culture)), new DefaultThesaurus(new ThesaurusDictionaryRetriever(context.Directory)), new WordRefEqualityComparer(), new TextIndexSearcher());
 		}
 
 		private void button1_Click_1(object sender, EventArgs e)
@@ -139,57 +145,55 @@ namespace TestApp {
 
 		private void btnCreateIndex_Click(object sender, EventArgs e)
 		{
-
-
 			string sql = "SELECT VerseID, VerseText FROM Verse";
 			using (SqlCeConnection conn = new SqlCeConnection(ConfigurationManager.ConnectionStrings["ConnectionString"].ConnectionString))
 			{
 				conn.Open();
 				var rdr = new SqlCeCommand(sql, conn).ExecuteReader();
 
-                var context = new TextFileAccessContext("Bible", IndexDir, new CultureInfo("en-US"));
-                var textIndexSaver = new TextIndexSaver(context);
+				var context = new TextFileAccessContext("Bible", IndexDir, new CultureInfo("en-US"));
+				var textIndexSaver = new TextIndexSaver(context);
 
-                var wordBreaker = new DefaultWordBreaker(new WordBreakingInformationRetriever(context.Directory, context.Culture)) { DatabasePath = context.Directory};
+				var wordBreaker = new DefaultWordBreaker(new WordBreakingInformationRetriever(context.Directory, context.Culture)) { DatabasePath = context.Directory};
 
-                var textIndexFiller = new TextIndexFiller(wordBreaker);
-                var indexCreator = new IndexCreator(textIndexFiller);
+				var textIndexFiller = new TextIndexFiller(wordBreaker);
+				var indexCreator = new IndexCreator(textIndexFiller);
 
 				var index = indexCreator.CreateIndex(new BibleVersuses(rdr));
-               
-                textIndexSaver.SaveIndex(index);
+			   
+				textIndexSaver.SaveIndex(index);
 
 				rdr.Close();
 			}
 		}
 
-        public class BibleVersuses : IEnumerable<Phrase>
-        {
-            private readonly IDataReader dataReader;
+		public class BibleVersuses : IEnumerable<Phrase>
+		{
+			private readonly IDataReader dataReader;
 
-            public BibleVersuses(IDataReader dataReader)
-            {
-                this.dataReader = dataReader;
-            }
+			public BibleVersuses(IDataReader dataReader)
+			{
+				this.dataReader = dataReader;
+			}
 
-            public IEnumerator<Phrase> GetEnumerator()
-            {
-                while(dataReader.Read())
-                {
-                    yield return new Phrase
-                                     {
-                                         Key = (int)dataReader["VerseID"],
-                                         Text = (string)dataReader["VerseText"]
-                                     };
-                }
-                yield break;
-            }
+			public IEnumerator<Phrase> GetEnumerator()
+			{
+				while(dataReader.Read())
+				{
+					yield return new Phrase
+									 {
+										 Key = (int)dataReader["VerseID"],
+										 Text = (string)dataReader["VerseText"]
+									 };
+				}
+				yield break;
+			}
 
-            IEnumerator IEnumerable.GetEnumerator()
-            {
-                return GetEnumerator();
-            }
-        }
+			IEnumerator IEnumerable.GetEnumerator()
+			{
+				return GetEnumerator();
+			}
+		}
 
 		private void lbResults_DoubleClick(object sender, EventArgs e)
 		{
