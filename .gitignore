@@ -7,3 +7,5 @@ dist
 *resharper*
 *.user
 *.cache
+/.svn
+/packages
