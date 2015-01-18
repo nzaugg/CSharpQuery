@@ -4,13 +4,13 @@ using System.Collections.Generic;
 namespace CSharpQuery.Index
 {
 	[ProtoContract]
-	public class WordReference
+	public class WordReference<T>
 	{
 		[ProtoMember(1)]
 		public string Word { get; set; }
 
 		[ProtoMember(2)]
-		public int Key { get; set; }
+		public T Key { get; set; }
 
 		[ProtoMember(3)]
 		public int PhraseIndex { get; set; }
@@ -19,14 +19,14 @@ namespace CSharpQuery.Index
 		{
 			if (obj == null)
 				return false;
-			if (obj is WordReference)
-				return ((WordReference) obj).Key == Key;
+			if (obj is WordReference<T>)
+				return ((WordReference<T>) obj).Key.Equals(Key);
 			return false;
 		}
 
 		public override int GetHashCode()
 		{
-			return Key + PhraseIndex;
+			return Key.GetHashCode() + PhraseIndex;
 		}
 
 		public override string ToString()
@@ -35,16 +35,16 @@ namespace CSharpQuery.Index
 		}
 	}
 
-	public class WordRefEqualityComparer : IEqualityComparer<WordReference>
+	public class WordRefEqualityComparer<T> : IEqualityComparer<WordReference<T>>
 	{
-		public bool Equals(WordReference x, WordReference y)
+		public bool Equals(WordReference<T> x, WordReference<T> y)
 		{
 			return x.Equals(y);
 		}
 
-		public int GetHashCode(WordReference obj)
+		public int GetHashCode(WordReference<T> obj)
 		{
-			return obj.Key;
+			return obj.GetHashCode();
 		}
 	}
 }

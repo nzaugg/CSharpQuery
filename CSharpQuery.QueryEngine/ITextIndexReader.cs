@@ -2,8 +2,8 @@
 
 namespace CSharpQuery.QueryEngine
 {
-    public interface ITextIndexReader
+    public interface ITextIndexReader<T>
     {
-        TextIndex GetTextIndex();
+        TextIndex<T> GetTextIndex();
     }
 }

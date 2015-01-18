@@ -7,12 +7,12 @@ using System;
 
 namespace CSharpQuery.IndexCreation
 {
-	public interface ITextIndexSaver
+	public interface ITextIndexSaver<T>
 	{
-		void SaveIndex(TextIndex textIndex);
+		void SaveIndex(TextIndex<T> textIndex);
 	}
 
-	public class TextIndexSaver : ITextIndexSaver
+	public class TextIndexSaver<T> : ITextIndexSaver<T>
 	{
 		private readonly TextIndexFileInformation textIndexFileInformation;
 		private readonly IIndexFileNameGenerator indexFileNameGenerator;
@@ -23,7 +23,7 @@ namespace CSharpQuery.IndexCreation
 			textIndexFileInformation = new TextIndexFileInformation();
 		}
 
-		public void SaveIndex(TextIndex textIndex)
+		public void SaveIndex(TextIndex<T> textIndex)
 		{
 			var fileName = indexFileNameGenerator.GetIndexFileName();
 

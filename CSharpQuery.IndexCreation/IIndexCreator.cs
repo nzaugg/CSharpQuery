@@ -3,8 +3,8 @@ using CSharpQuery.Index;
 
 namespace CSharpQuery.IndexCreation
 {
-    public interface IIndexCreator
+    public interface IIndexCreator<T>
     {
-        TextIndex CreateIndex(IEnumerable<Phrase> phrases);
+        TextIndex<T> CreateIndex(IEnumerable<Phrase<T>> phrases);
     }
 }

@@ -1,8 +1,8 @@
 ﻿namespace CSharpQuery.Index
 {
-    public class Phrase
+    public class Phrase<T>
     {
-        public int Key { get; set; }
+        public T Key { get; set; }
         public string Text { get; set; }
     }
 }

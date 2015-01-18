@@ -14,8 +14,8 @@ using System.ComponentModel;
 using CSharpQuery.Thesaurus;
 
 namespace CSharpQuery.QueryEngine {
-	public class QueryResult {
-		public int Key { get; set; }
+	public class QueryResult<T> {
+		public T Key { get; set; }
 		public decimal Rank { get; set; }
 
 		public decimal searchTermsProximity { get; set; }
@@ -23,6 +23,6 @@ namespace CSharpQuery.QueryEngine {
 		public decimal lowPhraseIndex  { get; set; }
 		public decimal multipleOccurance { get; set; }
 
-		public List<WordReference> WordIndexes { get; set; }
+		public List<WordReference<T>> WordIndexes { get; set; }
 	}
 }

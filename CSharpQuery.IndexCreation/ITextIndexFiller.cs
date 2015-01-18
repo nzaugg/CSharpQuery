@@ -2,8 +2,8 @@
 
 namespace CSharpQuery.IndexCreation
 {
-    public interface ITextIndexFiller
+    public interface ITextIndexFiller<T>
     {
-        void AddPhraseToIndex(TextIndex index, Phrase phrase);
+        void AddPhraseToIndex(TextIndex<T> index, Phrase<T> phrase);
     }
 }

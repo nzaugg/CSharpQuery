@@ -27,10 +27,9 @@ namespace TestApp {
 
 		private const string IndexDir = @"..\..\Index\";
 
-
-		TextIndex idx;
-		FreeTextQuery Query;
-		TextIndexReader IndexReader;
+		FreeTextQuery<int> Query;
+		TextIndexReader<int> IndexReader;
+		List<QueryResult<int>> previousQuery;
 
 		public frmTest() {
 			InitializeComponent();
@@ -44,23 +43,8 @@ namespace TestApp {
 			get { return ConfigurationManager.AppSettings["DefaultPath"]; }
 		}
 
-		string _idx;
-		string IndexLocation {
-			get {
-				if (string.IsNullOrEmpty(_idx)) {
-					//FolderBrowserDialog dlg = new FolderBrowserDialog();
-					//dlg.Description = "Please select the location of the index you wish to use for this query.";
-					//dlg.SelectedPath = DefaultPath;
-					//if (dlg.ShowDialog() == DialogResult.OK) {
-					//	_idx = dlg.SelectedPath;
-					//}
-					return @"..\..\Index\";
-				}
-				return _idx;
-			}
-		}
-
-		List<QueryResult> previousQuery;
+		protected string IndexLocation { get { return @"..\..\Index\"; } }
+		
 		private void btnRetreiveFromIndex_Click(object sender, EventArgs e) {
 
 			// QUERY TEST
@@ -71,25 +55,29 @@ namespace TestApp {
 			if (Query == null)
 				Query = LoadIndex();
 
-			List<QueryResult> result = Query.SearchFreeTextQuery(IndexReader.GetTextIndex(), txtCriteria.Text);
+			List<QueryResult<int>> result = Query.SearchFreeTextQuery(IndexReader.GetTextIndex(), txtCriteria.Text);
 			sw.Stop();
 
 			previousQuery = result;
 			lblStopwatch.Text = string.Format("Query took: {0} MS / # Of Rows: {1}", sw.Elapsed.TotalMilliseconds, result.Count);
 
 			lbResults.Items.Clear();
-			foreach (QueryResult r in result) {
+			foreach (QueryResult<int> r in result) {
 
 				lbResults.Items.Add(string.Format("{0};\t Key: {1};\t Rank: {2};\t MO: {3};\t LPI: {4};\t STP: {5};\t WM: {6}",
 					string.Join(", ", r.WordIndexes.Select(v => v.Word).ToArray()), r.Key, r.Rank, r.multipleOccurance, r.lowPhraseIndex, r.searchTermsProximity, r.wordMatching));
 			}
 		}
 
-		private FreeTextQuery LoadIndex()
+		private FreeTextQuery<int> LoadIndex()
 		{
 			var context = new TextFileAccessContext("Bible", IndexLocation, new CultureInfo("en-US"));
-			IndexReader = new TextIndexReader(context);
-			return new FreeTextQuery(new DefaultWordBreaker(new WordBreakingInformationRetriever(context.Directory, context.Culture)), new DefaultThesaurus(new ThesaurusDictionaryRetriever(context.Directory)), new WordRefEqualityComparer(), new TextIndexSearcher());
+			IndexReader = new TextIndexReader<int>(context);
+			return new FreeTextQuery<int>(
+				new DefaultWordBreaker(
+					new WordBreakingInformationRetriever(context.Directory, context.Culture)), 
+					new DefaultThesaurus(new ThesaurusDictionaryRetriever(context.Directory)), 
+					new WordRefEqualityComparer<int>(), new TextIndexSearcher<int>());
 		}
 
 		private void button1_Click_1(object sender, EventArgs e)
@@ -152,12 +140,12 @@ namespace TestApp {
 				var rdr = new SqlCeCommand(sql, conn).ExecuteReader();
 
 				var context = new TextFileAccessContext("Bible", IndexDir, new CultureInfo("en-US"));
-				var textIndexSaver = new TextIndexSaver(context);
+				var textIndexSaver = new TextIndexSaver<int>(context);
 
 				var wordBreaker = new DefaultWordBreaker(new WordBreakingInformationRetriever(context.Directory, context.Culture)) { DatabasePath = context.Directory};
 
-				var textIndexFiller = new TextIndexFiller(wordBreaker);
-				var indexCreator = new IndexCreator(textIndexFiller);
+				var textIndexFiller = new TextIndexFiller<int>(wordBreaker);
+				var indexCreator = new IndexCreator<int>(textIndexFiller);
 
 				var index = indexCreator.CreateIndex(new BibleVersuses(rdr));
 			   
@@ -167,7 +155,7 @@ namespace TestApp {
 			}
 		}
 
-		public class BibleVersuses : IEnumerable<Phrase>
+		public class BibleVersuses : IEnumerable<Phrase<int>>
 		{
 			private readonly IDataReader dataReader;
 
@@ -176,11 +164,11 @@ namespace TestApp {
 				this.dataReader = dataReader;
 			}
 
-			public IEnumerator<Phrase> GetEnumerator()
+			public IEnumerator<Phrase<int>> GetEnumerator()
 			{
 				while(dataReader.Read())
 				{
-					yield return new Phrase
+					yield return new Phrase<int>
 									 {
 										 Key = (int)dataReader["VerseID"],
 										 Text = (string)dataReader["VerseText"]

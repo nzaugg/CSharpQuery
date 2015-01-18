@@ -10,9 +10,10 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Collections;
 using System.Linq;
+using System.Text;
 
 namespace CSharpQuery.WordBreaker {
-    /// <summary>
+	/// <summary>
 	/// Responsible for the creation of an Index.
 	/// This class will break a phrase into words.
 	/// It also has the responsibility of:
@@ -24,21 +25,21 @@ namespace CSharpQuery.WordBreaker {
 	/// in both the gloabl and regional dialect.
 	/// </summary>
 	public class DefaultWordBreaker : IWordBreaker
-    {
-        private readonly IWordBreakingInformationRetriever wordBreakingInformationRetriever;
+	{
+		private readonly IWordBreakingInformationRetriever wordBreakingInformationRetriever;
 
-        protected bool initialized = false;
+		protected bool initialized = false;
 
 		public CultureInfo Culture { get; set; }
 		public string DatabasePath { get; set; }
 
 		public DefaultWordBreaker(IWordBreakingInformationRetriever wordBreakingInformationRetriever)
 		{
-		    this.wordBreakingInformationRetriever = wordBreakingInformationRetriever;
-		    this.Culture = new CultureInfo("en-US");
+			this.wordBreakingInformationRetriever = wordBreakingInformationRetriever;
+			this.Culture = new CultureInfo("en-US");
 		}
 
-        public void Initialize() {
+		public void Initialize() {
 			initialized = true;
 
 		}
@@ -59,15 +60,18 @@ namespace CSharpQuery.WordBreaker {
 				Initialize();
 
 
-		    var info = wordBreakingInformationRetriever.GetWordBreakingInformation();
+			var info = wordBreakingInformationRetriever.GetWordBreakingInformation();
 
 			// Do a bit of pre-processing
+			phrase = RemoveDiacritics(phrase);
+
 			string lowerPhrase = phrase.ToLower(Culture);
+			
 			// Do replacements on multi-char substitutions
-            info.Substitutions.Keys.ToList().ForEach(n => lowerPhrase = lowerPhrase.Replace(n, info.Substitutions[n]));
+			info.Substitutions.Keys.ToList().ForEach(n => lowerPhrase = lowerPhrase.Replace(n, info.Substitutions[n]));
 
 			var results = new List<Word>();
-            var words = lowerPhrase.Split(info.Whitespace.ToArray(), StringSplitOptions.RemoveEmptyEntries).ToList();
+			var words = lowerPhrase.Split(info.Whitespace.ToArray(), StringSplitOptions.RemoveEmptyEntries).ToList();
 			words.ForEach(n => n = n.Trim().ToLower(Culture));
 
 			results.AddRange(from n in words where !info.NoiseWords.ContainsKey(n) select new Word(n.Trim(), 0));
@@ -85,10 +89,25 @@ namespace CSharpQuery.WordBreaker {
 			return results;
 		}
 
+		private static string RemoveDiacritics(string text)
+		{
+			var normalizedString = text.Normalize(NormalizationForm.FormD);
+			var stringBuilder = new StringBuilder();
+
+			foreach (var c in normalizedString)
+			{
+				var unicodeCategory = CharUnicodeInfo.GetUnicodeCategory(c);
+				if (unicodeCategory != UnicodeCategory.NonSpacingMark)
+					stringBuilder.Append(c);
+			}
+
+			return stringBuilder.ToString().Normalize(NormalizationForm.FormC);
+		}
+
 		private Word CreateWord(string word, int pos) {
 			// check to see if she is a noise word
-		    var wordBreakingInformation = wordBreakingInformationRetriever.GetWordBreakingInformation();
-		    word = word.Trim().Trim(wordBreakingInformation.Whitespace.ToArray()).ToLower(Culture);
+			var wordBreakingInformation = wordBreakingInformationRetriever.GetWordBreakingInformation();
+			word = word.Trim().Trim(wordBreakingInformation.Whitespace.ToArray()).ToLower(Culture);
 			if ( wordBreakingInformation.NoiseWords.ContainsKey(word) )
 				return null;
 			if (string.IsNullOrEmpty(word))

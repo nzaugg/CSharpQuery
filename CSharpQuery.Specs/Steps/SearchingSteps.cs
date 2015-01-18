@@ -17,7 +17,7 @@ namespace CSharpQuery.Specs.Steps
         [When(@"I search for '(.*)'")]
         public void x(string searchTerm)
         {
-            var index = ScenarioContext.Current.Get<TextIndex>();
+            var index = ScenarioContext.Current.Get<TextIndex<int>>();
 
             var mock = new Mock<IThesaurusDictionaryRetriever>();
             mock.Setup(x => x.GetThesaurus())
@@ -30,7 +30,7 @@ namespace CSharpQuery.Specs.Steps
                 Substitutions = new Dictionary<string, string>(),
                 Whitespace = new List<char>()});
 
-            var query = new FreeTextQuery(new DefaultWordBreaker(wordBreakingInformationRetriever.Object), thesaurus, new WordRefEqualityComparer(), new TextIndexSearcher());
+            var query = new FreeTextQuery<int>(new DefaultWordBreaker(wordBreakingInformationRetriever.Object), thesaurus, new WordRefEqualityComparer<int>(), new TextIndexSearcher<int>());
             var results = query.SearchFreeTextQuery(index, searchTerm);
 
             ScenarioContext.Current.Set(results.Select(x=>x));
@@ -39,7 +39,7 @@ namespace CSharpQuery.Specs.Steps
         [Then(@"my search results should include")]
         public void ThenMySearchResultsShouldInclude(Table table)
         {
-            var results = ScenarioContext.Current.Get<IEnumerable<QueryResult>>();
+            var results = ScenarioContext.Current.Get<IEnumerable<QueryResult<int>>>();
 
             table.CompareToSet(results);
         }
@@ -47,7 +47,7 @@ namespace CSharpQuery.Specs.Steps
         [Then(@"I should get no search results")]
         public void ThenIShouldGetNoSearchResults()
         {
-            var results = ScenarioContext.Current.Get<IEnumerable<QueryResult>>();
+            var results = ScenarioContext.Current.Get<IEnumerable<QueryResult<int>>>();
 
             results.Count().ShouldEqual(0);
         }

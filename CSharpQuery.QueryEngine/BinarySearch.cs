@@ -9,17 +9,17 @@ using System.Collections.Generic;
 using CSharpQuery.Index;
 
 namespace CSharpQuery.QueryEngine {
-	public class BinarySearch {
-	    private readonly SearchPredicateComparer searchMethod;
+	public class BinarySearch<T> {
+		private readonly SearchPredicateComparer searchMethod;
 
-	    public delegate int SearchPredicateComparer(string str1, string str2);
+		public delegate int SearchPredicateComparer(string str1, string str2);
 
-        public BinarySearch(SearchPredicateComparer searchMethod)
-        {
-            this.searchMethod = searchMethod;
-        }
+		public BinarySearch(SearchPredicateComparer searchMethod)
+		{
+			this.searchMethod = searchMethod;
+		}
 
-	    public List<string> Search(SortedList<string, List<WordReference>> value, string searchPhrase) {
+		public List<string> Search(SortedList<string, List<WordReference<T>>> value, string searchPhrase) {
 
 			List<string> results = new List<string>();
 
@@ -44,14 +44,14 @@ namespace CSharpQuery.QueryEngine {
 			return results;
 		}
 
-		private static int SearchRecursive(int start, int end, SortedList<string, List<WordReference>> value, string searchPhrase, SearchPredicateComparer searchMethod) {
+		private static int SearchRecursive(int start, int end, SortedList<string, List<WordReference<T>>> value, string searchPhrase, SearchPredicateComparer searchMethod) {
 			if (start == end || start > end || end-start==1)
 				return start;
 
 			int middle = start + ((end - start) / 2);
-		    
+			
 			// test the middle
-		    string key = value.Keys[middle];
+			string key = value.Keys[middle];
 
 			int result = searchMethod(searchPhrase, key);
 			if (result < 0)

@@ -24,9 +24,9 @@ namespace CSharpQuery.Specs.Steps
                 Substitutions = new Dictionary<string, string>(),
                 Whitespace = new List<char>()});
 
-            var indexCreator = new IndexCreator(new TextIndexFiller(new DefaultWordBreaker(mock.Object)));
+            var indexCreator = new IndexCreator<int>(new TextIndexFiller<int>(new DefaultWordBreaker(mock.Object)));
 
-            var phrases = people.Select(x => new Phrase {Key = x.Key, Text = x.FirstName + " " + x.LastName});
+            var phrases = people.Select(x => new Phrase<int> {Key = x.Key, Text = x.FirstName + " " + x.LastName});
 
             var index = indexCreator.CreateIndex(phrases);
 

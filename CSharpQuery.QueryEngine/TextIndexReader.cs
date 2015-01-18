@@ -2,7 +2,7 @@
 
 namespace CSharpQuery.QueryEngine
 {
-    public class TextIndexReader : ITextIndexReader
+    public class TextIndexReader<T> : ITextIndexReader<T>
     {
         private readonly TextFileAccessContext textFileAccessContext;
 
@@ -11,19 +11,19 @@ namespace CSharpQuery.QueryEngine
             this.textFileAccessContext = textFileAccessContext;
         }
 
-        public TextIndex GetTextIndex()
+        public TextIndex<T> GetTextIndex()
         {
             var indexKey = textFileAccessContext.Name + textFileAccessContext.Culture;
 
-            if (FreeTextQuery.Indexes.Keys.Contains(indexKey))
-                return FreeTextQuery.Indexes[indexKey];
+            if (FreeTextQuery<T>.Indexes.Keys.Contains(indexKey))
+                return FreeTextQuery<T>.Indexes[indexKey];
 
-            var textIndexLoader = new TextIndexLoader(textFileAccessContext);
+            var textIndexLoader = new TextIndexLoader<T>(textFileAccessContext);
             var index = textIndexLoader.LoadIndex();
 
-            var lc = FreeTextQuery.readerLock.UpgradeToWriterLock(1000 * 60); // 60 seconds!
-            FreeTextQuery.Indexes.Add(indexKey, index);
-            FreeTextQuery.readerLock.DowngradeFromWriterLock(ref lc);
+            var lc = FreeTextQuery<T>.readerLock.UpgradeToWriterLock(1000 * 60); // 60 seconds!
+            FreeTextQuery<T>.Indexes.Add(indexKey, index);
+            FreeTextQuery<T>.readerLock.DowngradeFromWriterLock(ref lc);
             return index;
         }
     }

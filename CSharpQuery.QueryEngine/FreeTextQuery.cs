@@ -9,12 +9,12 @@ using CSharpQuery.WordBreaker;
 
 namespace CSharpQuery.QueryEngine
 {
-    public class FreeTextQuery
+    public class FreeTextQuery<T>
     {
         private readonly IWordBreaker wordBreaker;
         private readonly IThesaurus thesaurus;
-        private readonly IEqualityComparer<WordReference> wordReferenceEqualityComparer;
-        private readonly ITextIndexSearcher textIndexSearcher;
+        private readonly IEqualityComparer<WordReference<T>> wordReferenceEqualityComparer;
+        private readonly ITextIndexSearcher<T> textIndexSearcher;
 
         #region Fields - Query Tuning
 
@@ -27,20 +27,20 @@ namespace CSharpQuery.QueryEngine
 
         #region Properties
 
-        public static SortedList<string, TextIndex> Indexes { get; set; }
+        public static SortedList<string, TextIndex<T>> Indexes { get; set; }
         public static ReaderWriterLock readerLock = new ReaderWriterLock();
 
         #endregion
 
         public FreeTextQuery(IWordBreaker wordBreaker, 
             IThesaurus thesaurus, 
-            IEqualityComparer<WordReference> wordReferenceEqualityComparer,
-            ITextIndexSearcher textIndexSearcher)
+            IEqualityComparer<WordReference<T>> wordReferenceEqualityComparer,
+            ITextIndexSearcher<T> textIndexSearcher)
         {
             this.wordBreaker = wordBreaker;
             this.thesaurus = thesaurus;
             this.wordReferenceEqualityComparer = wordReferenceEqualityComparer;
-            Indexes = new SortedList<string, TextIndex>();
+            Indexes = new SortedList<string, TextIndex<T>>();
             this.textIndexSearcher = textIndexSearcher;
         }
 
@@ -56,16 +56,16 @@ namespace CSharpQuery.QueryEngine
 
         #endregion
 
-        public List<QueryResult> SearchFreeTextQuery(TextIndex textIndex, string query)
+        public List<QueryResult<T>> SearchFreeTextQuery(TextIndex<T> textIndex, string query)
         {
             return SearchFreeTextQuery(textIndex, query, uint.MaxValue);
         }
 
-        public List<QueryResult> SearchFreeTextQuery(TextIndex textIndex, string query, uint topNbyRank)
+        public List<QueryResult<T>> SearchFreeTextQuery(TextIndex<T> textIndex, string query, uint topNbyRank)
         {
             readerLock.AcquireReaderLock(1000*60); // 60 second timeout
 
-            var results = new Dictionary<Synonym, List<WordReference>>();
+            var results = new Dictionary<Synonym, List<WordReference<T>>>();
 
             foreach (var word in GetTheWordsBeingSearchedFor(query))
                 results.Add(word, GetTheSearchResultsForThisWord(textIndex, word));
@@ -77,14 +77,14 @@ namespace CSharpQuery.QueryEngine
             return rankedResults;
         }
 
-        private List<QueryResult> RankTheResults(string query, SortedList<int, QueryResult> queryResults)
+        private List<QueryResult<T>> RankTheResults(string query, SortedList<T, QueryResult<T>> queryResults)
         {
             return RankResults(query, GetTheWordsBeingSearchedFor(query), queryResults);
         }
 
-        private SortedList<int, QueryResult> IntersectTheResults(Dictionary<Synonym, List<WordReference>> results)
+        private SortedList<T, QueryResult<T>> IntersectTheResults(Dictionary<Synonym, List<WordReference<T>>> results)
         {
-            var resultList = new List<int>();
+            var resultList = new List<T>();
             var firstTime = true;
             foreach (var wrfs in results.Values)
             {
@@ -101,7 +101,7 @@ namespace CSharpQuery.QueryEngine
             return PivitQuery(results, resultList);
         }
 
-        private List<WordReference> GetTheSearchResultsForThisWord(TextIndex textIndex, Synonym word)
+        private List<WordReference<T>> GetTheSearchResultsForThisWord(TextIndex<T> textIndex, Synonym word)
         {
             var resultsForThisWord = textIndexSearcher.SearchTheIndex(textIndex, word.OriginalWord);
 
@@ -116,11 +116,11 @@ namespace CSharpQuery.QueryEngine
             return resultsForThisWord;
         }
 
-        private List<WordReference> GetTheSearchResultsForTheSynonyms(TextIndex textIndex, string suggestedWord)
+        private List<WordReference<T>> GetTheSearchResultsForTheSynonyms(TextIndex<T> textIndex, string suggestedWord)
         {
             var synonyms = wordBreaker.BreakWords(suggestedWord);
 
-            var subResults = new List<WordReference>();
+            var subResults = new List<WordReference<T>>();
             foreach (var synonym in synonyms)
             {
                 var searchResults = textIndex[synonym.WordText];
@@ -138,21 +138,21 @@ namespace CSharpQuery.QueryEngine
             return thesaurus.Suggest(queryWords);
         }
 
-        public List<QueryResult> SearchTextQuery(TextIndex textIndex, string catalog, CultureInfo culture, string query)
+        public List<QueryResult<T>> SearchTextQuery(TextIndex<T> textIndex, string catalog, CultureInfo culture, string query)
         {
             readerLock.AcquireReaderLock(1000*60); // 60 second timeout
 
             var queryWordsList = wordBreaker.BreakWords(query);
             var wordList = queryWordsList.Select(n => new Synonym {OriginalWord = n.WordText}).ToList();
 
-            var results = new Dictionary<Synonym, List<WordReference>>();
+            var results = new Dictionary<Synonym, List<WordReference<T>>>();
             foreach (var word in wordList)
                 results.Add(word, textIndex[word.OriginalWord]);
 
             readerLock.ReleaseReaderLock();
 
             // intersect the results -- what word ref's contain all phrases searched for
-            var resultList = new List<int>();
+            var resultList = new List<T>();
             var firstTime = true;
             foreach (var wrfs in results.Values)
             {
@@ -177,11 +177,11 @@ namespace CSharpQuery.QueryEngine
         /// <param name = "results">The word lookup results</param>
         /// <param name = "resultList">The intersection of the results lists</param>
         /// <returns>A SortedList(int, QueryResult) int: They [Key] value in the query; QueryResult: The matching words for that key</returns>
-        private static SortedList<int, QueryResult> PivitQuery(Dictionary<Synonym, List<WordReference>> results, List<int> resultList)
+        private static SortedList<T, QueryResult<T>> PivitQuery(Dictionary<Synonym, List<WordReference<T>>> results, List<T> resultList)
         {
             // WordRef - Synonyms?
-            var queryResults = new SortedList<int, QueryResult>();
-            var sr = new List<WordReference>();
+            var queryResults = new SortedList<T, QueryResult<T>>();
+            var sr = new List<WordReference<T>>();
             foreach (var wrd in results.Keys)
             {
                 sr.AddRange(
@@ -195,7 +195,7 @@ namespace CSharpQuery.QueryEngine
                     queryResults[wr.Key].WordIndexes.Add(wr);
                 else
                 {
-                    var q = new QueryResult {Key = wr.Key, WordIndexes = new List<WordReference>()};
+                    var q = new QueryResult<T> {Key = wr.Key, WordIndexes = new List<WordReference<T>>()};
                     q.WordIndexes.Add(wr);
                     queryResults.Add(wr.Key, q);
                 }
@@ -203,7 +203,7 @@ namespace CSharpQuery.QueryEngine
             return queryResults;
         }
 
-        private static List<QueryResult> RankResults(string query, List<Synonym> words, SortedList<int, QueryResult> queryResults)
+        private static List<QueryResult<T>> RankResults(string query, List<Synonym> words, SortedList<T, QueryResult<T>> queryResults)
         {
             foreach (var keyRef in queryResults.Keys)
             {
@@ -239,7 +239,7 @@ namespace CSharpQuery.QueryEngine
             return Math.Round(value, 4);
         }
 
-        private static decimal RankMultipleOccurance(string query, List<Synonym> words, QueryResult queryResult)
+        private static decimal RankMultipleOccurance(string query, List<Synonym> words, QueryResult<T> queryResult)
         {
             // Only use the original words
             decimal WordCount = 0;
@@ -259,7 +259,7 @@ namespace CSharpQuery.QueryEngine
             return Normalize(rank);
         }
 
-        private static decimal RankLowPhraseIndex(string query, List<Synonym> words, QueryResult queryResult)
+        private static decimal RankLowPhraseIndex(string query, List<Synonym> words, QueryResult<T> queryResult)
         {
             // The sum of the pos
             decimal posVal = 0;
@@ -274,7 +274,7 @@ namespace CSharpQuery.QueryEngine
             return Normalize(result);
         }
 
-        private static decimal RankWordMatching(string query, List<Synonym> words, QueryResult queryResult)
+        private static decimal RankWordMatching(string query, List<Synonym> words, QueryResult<T> queryResult)
         {
             // Original serch terms.  
             // The first search term gets more weight
@@ -324,7 +324,7 @@ namespace CSharpQuery.QueryEngine
             return Normalize(result);
         }
 
-        private static decimal RankSearchTermsProximity(string query, List<Synonym> words, QueryResult queryResult)
+        private static decimal RankSearchTermsProximity(string query, List<Synonym> words, QueryResult<T> queryResult)
         {
             // Not counting the thesaurus looked up words, 
             // How close together are the search terms? Are they right next to each other?
