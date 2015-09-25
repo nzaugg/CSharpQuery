@@ -83,6 +83,7 @@
     <Compile Include="TextIndexSearcher.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="CSharpQuery.QueryEngine.nuspec" />
     <None Include="Key.snk" />
     <None Include="packages.config" />
   </ItemGroup>

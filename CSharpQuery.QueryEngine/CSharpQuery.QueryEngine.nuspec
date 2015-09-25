@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+	<metadata>
+		<id>Mindfire.CSharpQuery</id>
+		<version>1.1.0</version>
+		<title>CSharpQuery</title>
+		<authors>Mindfire Technology,Nate Zaugg</authors>
+		<owners>Mindfire Technology,Nate Zaugg</owners>
+		<licenseUrl>http://csharpquery.codeplex.com/license</licenseUrl>
+		<projectUrl>https://github.com/nzaugg/CSharpQuery</projectUrl>
+		<iconUrl>http://download-codeplex.sec.s-msft.com/Download?ProjectName=csharpquery&amp;DownloadId=114194&amp;Build=21031</iconUrl>
+		<requireLicenseAcceptance>false</requireLicenseAcceptance>
+		<description>CSharpQuery is a fast, internationalized, multi-threaded, full text search engine. It supports thesaurus lookup, diacritic and cyrillic characters, result ranking, standardized word breaking, and more. It's extremely easy to get up and going; simply add the key/values during indexing and get the keys/rakings back from a query.</description>
+		<summary>Simple full text query engine that can be used stand-alone or with a database.</summary>
+		<releaseNotes>Initial Release in NuGet.</releaseNotes>
+		<copyright>Mindfire Technology</copyright>
+		<language />
+		<tags>Full Text Query, Full Text Search, Index</tags>
+	</metadata>
+</package>
